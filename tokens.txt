@@ -2,7 +2,7 @@ const
 ident (result, this, super inclus)
 plus
 minus
-times
+mult
 div
 affect -> :=, affectation
 point -> le point, pour l'accès aux membres des classes
