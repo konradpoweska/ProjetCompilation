@@ -8,8 +8,7 @@ affect -> :=, affectation
 point -> le point, pour l'accès aux membres des classes
 endl -> le point virgule
 defi -> les deux points, qui indiquent une définition de variables
-keyw -> les mots-clefs (object, var, def, is, override, extends, class, new, return)
+keyw -> les mots-clefs (object, var, def, is, override, extends, class, new, return, if, then, else)
 comp -> les opérateurs de comparaison (<, >, <=, >=, ==, !=)
-ifte -> if(condition booléenne) then (instruction) else (instruction) //voir TP pour comment c'est géré
 
 
