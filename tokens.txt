@@ -8,7 +8,6 @@ affect -> :=, affectation
 point -> le point, pour l'accès aux membres des classes
 endl -> le point virgule
 defi -> les deux points, qui indiquent une définition de variables
-keyw -> les mots-clefs (object, var, def, is, override, extends, class, new, return, if, then, else)
 comp -> les opérateurs de comparaison (<, >, <=, >=, ==, !=)
 
-
+Les mots-clefs (object, var, def, is, override, extends, class, new, return, if, then, else) ont une règle particulière : leur token porte leur nom : le mot-clef class a pour token class
