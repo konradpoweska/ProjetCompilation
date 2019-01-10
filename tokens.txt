@@ -1,7 +1,7 @@
 CONST
 IDENT (result, this, super inclus)
-PLUS
-MINUS
+ADD
+SUB
 MULT
 DIV
 AFFECT -> :=, affectation
