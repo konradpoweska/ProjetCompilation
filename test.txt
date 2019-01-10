@@ -1,0 +1,48 @@
+class Personne(var nom: String, var prenom: String, var age: Integer) is
+{
+	def Personne(var nom: String, var prenom: String, var age: Integer) is {}
+
+	def getNom() : String := nom;
+	def getPrenom() : String := prenom;
+	def getAge() : Integer := age;
+}
+
+class Etudiant(nom: String, prenom: String, age: Integer, var numEtudiant: Integer) extends Personne is
+{
+	var estInscrit: Integer;
+	def Etudiant(nom: String, prenom: String, age: Integer, var numEtudiant: Integer): Personne(nom, prenom, age, numEtudiant) is {
+		estInscrit := 0;
+	}
+
+	def getNumEtudiant() : Integer := numEtudiant;
+	def getStatut() : Integer := estInscrit;
+	def inscrire() is { 
+		if this.estInscrit = 0 then {
+			this.estInscrit := 1;
+			"S'inscrire avec success!".println();
+		} 
+		else "Deja inscrit!".println();
+	}
+}
+
+object Test is {
+	def Test is {}
+	def test (e: Etudiant) is {
+		pn: String; ne: Integer; 
+		is
+		n := e.getNom(); 
+		pn := e.getPrenom();
+		ne := e.getNumEtudiant();
+		s := e.getStatut(); 
+		n.print(); " ".print(); pn.print(); ": ".print(); ne.print();
+		if s = 0 else " Ne pas s'inscrire.".println(); 
+		else "Inscrit.".println();
+	}
+}
+
+{
+	e: Etudiant := new Etudiant("ABC", "def", 22, 20190110);
+	Test.test(e);
+	e.inscrire();
+	Test.test(e);
+}
