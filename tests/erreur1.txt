@@ -1,0 +1,5 @@
+cass Test (var x : Integer, var y : Integer) is
+{
+    def Test (var x : Integer, var y : Integer) is {}
+    def plus () : Integer := x+y;
+}
