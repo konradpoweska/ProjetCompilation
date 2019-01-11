@@ -1,34 +1,35 @@
-Class : CLASS NomClasse '(' LParamOpt ')' ExtendsOpt IS '{' ListOptDecl DefContruct ListOptMethod '}'
-ExtendsOpt : EXTENDS NomClasse | ;
-LParamOpt : Param','LParamOpt|Param| ;
-Param : VAR Nom ':' NomClasse | ;
-DefConstruct : DEF NomClasse '(' LParamOut ')' ConstructSuper IS '{' Bloc '}';
-ConstructSuper : ':' SuperClass '(' LParamOpt ')'| ;
+%token IF THEN ELSE CLASS EXTENDS VAR IS DEF OBJECT RETURN OVERRIDE NEW ADD SUB MULT DIV AFFECT IDENT CONST COMP
+
+%left ADD SUB
+%left MULT DIV
+%nonassoc COMP
+
+%%
+Class : CLASS IDENT '(' LParamOpt ')' ExtendsOpt IS '{' ListOptDecl DefConstruct ListOptMethod '}'
+ExtendsOpt : EXTENDS IDENT | ;
+LParamOpt : LParam | ;
+LParam : Param','LParam|Param;
+Param : VAR IDENT ':' IDENT;
+DefConstruct : DEF IDENT '(' LParamOpt ')' ConstructSuper IS '{' Bloc '}';
+ConstructSuper : ':' IDENT '(' LParamOpt ')'| ;
 ListOptDecl : Decl ListOptDecl| ;
-Decl : VAR Nom ':' NomClasse';';
+Decl : VAR IDENT ':' IDENT';';
 ListOptMethod : Method ListOptMethod| ;
-Method : Override DEF Nom '('ListParamOpt')'':'NomClasse AFFECT Expression | Override DEF Nom'('ListParamOpt')'NomClassOpt IS Bloc;
+Method : Override DEF IDENT '('LParamOpt')'':'IDENT AFFECT Expression | Override DEF IDENT'('LParamOpt')'IDENTClassOpt IS Bloc;
 Override : OVERRIDE | ;
-NomClassOpt : ':' NomClasse | ;
-NomClasse : IDENT;
-Objet : OBJECT Nom IS '{' ListOptDecl DefConstruct ListOptMethod '}';
-Expression : IDENT | CONST | '(' Expression ')' |'(' NomClasse Expression ')' | Selection | Instantiation | Message | ExpressionOperateur;
-Selection : Expression'.'Nom;
-CONST : Integer | String; //?CONST IS ALREADY A TOKEN, AND AS SUCH IS TERMINAL? 
-Instantiation : NEW NomClass'('ListParamOpt')';
-Message : IDENT'.'IDENT'('ListExpression')';
-ListExpression : Expression ListExpression | ;
-ExpressionOperateur : '('OperateurComp')' E | '('OperateurCalcul')' G;
-E : E COMP E; //?COMP?
-G : G ADD H | G SUB H | H;
-H : H MULT J | H DIV J | J;
-J : IDENT | '(' E ')';
+IDENTClassOpt : ':' IDENT | ;
+Objet : OBJECT IDENT IS '{' ListOptDecl DefConstruct ListOptMethod '}';
+Expression : Terminal | '(' Expression ')' |'(' IDENT Expression ')' | Selection | Instantiation | Message | Expression COMP Expression | Expression ADD Expression | Expression SUB Expression | Expression DIV Expression | Expression MULT Expression;
+Selection : IDENT'.'IDENT | Selection'.'IDENT;
+Instantiation : NEW IDENT'('LParamOpt')';
+Message : Selection'('LParam')';
+ListInst : Instruction ListInst | Instruction;
+Terminal : CONST | IDENT;
 Instruction : Expression';' | Bloc | RETURN';' | Affectation | Ifte;
 Bloc : '{' ListOptInstruct '}' | '{' ListDeclVar IS ListInst '}';
-ListOptInstruct : Instruction ListOptInst | ;
+ListOptInstruct : Instruction ListOptInstruct | ;
 ListDeclVar : DeclVar ListDeclVar | DeclVar;
-DeclVar : Nom ':' NomClass ExpressionOpt;
-ExpressionOpt : Expression | ;//? AFFECT ?
-Affectation : Cible AFFECT Expression';';
-Cible : IDENT;
-Ifte : IF Expression THEN Instruction ELSE Instruction;//ELSE NOT OPTIONNAL
+DeclVar : IDENT ':' IDENT AffectOpt';';
+AffectOpt : AFFECT Expression | ;
+Affectation : IDENT AFFECT Expression';';
+Ifte : IF Expression THEN Instruction ELSE Instruction;
