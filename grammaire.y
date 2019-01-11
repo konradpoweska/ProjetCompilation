@@ -5,20 +5,22 @@
 %nonassoc COMP
 
 %%
-Class : CLASS IDENT '(' LParamOpt ')' ExtendsOpt IS '{' ListOptDecl DefConstruct ListOptMethod '}'
+Program : LDeclsOpt Bloc;
+LDeclsOpt : Class LDeclsOpt | Object LDeclsOpt | ;
+Class : CLASS IDENT '(' LParamOpt ')' ExtendsOpt IS '{' ListOptDecl DefConstruct ListOptMethod '}';
 ExtendsOpt : EXTENDS IDENT | ;
 LParamOpt : LParam | ;
 LParam : Param','LParam|Param;
 Param : VAR IDENT ':' IDENT;
-DefConstruct : DEF IDENT '(' LParamOpt ')' ConstructSuper IS '{' Bloc '}';
+DefConstruct : DEF IDENT '(' LParamOpt ')' ConstructSuper IS Bloc;
 ConstructSuper : ':' IDENT '(' LParamOpt ')'| ;
 ListOptDecl : Decl ListOptDecl| ;
+Object : OBJECT IDENT IS '{' ListOptDecl DefConstruct ListOptMethod '}';
 Decl : VAR IDENT ':' IDENT';';
 ListOptMethod : Method ListOptMethod| ;
 Method : Override DEF IDENT '('LParamOpt')'':'IDENT AFFECT Expression | Override DEF IDENT'('LParamOpt')'IDENTClassOpt IS Bloc;
 Override : OVERRIDE | ;
 IDENTClassOpt : ':' IDENT | ;
-Objet : OBJECT IDENT IS '{' ListOptDecl DefConstruct ListOptMethod '}';
 Expression : Terminal | '(' Expression ')' |'(' IDENT Expression ')' | Selection | Instantiation | Message | Expression COMP Expression | Expression ADD Expression | Expression SUB Expression | Expression DIV Expression | Expression MULT Expression;
 Selection : IDENT'.'IDENT | Selection'.'IDENT;
 Instantiation : NEW IDENT'('LParamOpt')';
