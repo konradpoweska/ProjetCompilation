@@ -5,6 +5,6 @@ class Test (var x : Integer, var y : Integer) is
 }
 
 {
-    Test xPlusy = new Test (1,2);
+    Test xPlusy := new Test (1,2);
     xPlusy.plus().toString().print;
 }
