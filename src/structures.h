@@ -50,20 +50,7 @@ typedef enum _Label{
 
 	/* KeyWord */
 	L_IFTHENELSE=12,	/* (ternary Operator (3child)) */
-	L_NEW = 13,			/* Creation of a new instance (2 children : 0=ClassName, 1=ListParam) */
-
-	/* Declarations/Definitions */
-	L_CLASSDEF=14,		/* (4 children : 0=className, 1=ListParam, 2=SuperClass, 3=Body(TreeP)) */
-	L_OBJECTDEF=15,		/* (2 children : 0=ObjectName, 1=Body) => Object is just a ""Static"" class */
-	L_ATTRIBDECL=16,	/* declaration of an attribute => var name : ClassName; (2 children : varName and ClassName) */
-	L_METHODDECLSHORT=17,	/* declaration of a short method (no bloc)	(5 children : 0=Override?, 1=MethodName, 2=ListParam, 3=ClassName, 4=Expr) */
-	L_METHODDECLLONG=18,	/* declaration of a long method (with bloc)	(5 children : 0=Override?, 1=MethodName, 2=ListParam, 3=ClassName, 4=Bloc) */
-
-	/* List of definitions */
-
-	L_LISTDEF=114,		/* (2 children) => use to chain in the AST the class/object definition */
-	L_LISTPARAM=116,	/* (2 children : 0=Parameter(treeP), 1=ListParam (with this Label) )=> use to chain in the AST the parameters definition */
-	L_LISTMETHODS=117,
+	L_NEW = 13,			/* Creation of a new instance of a class (2 children : 0=ClassName, 1=ListParam) */
 
 	/* A FINIR LES MOTS CLEFS */
 
@@ -84,9 +71,10 @@ typedef enum _IdentNature{
 	RESULT
 } IdentNature;
 
-		/* Definition of an AST */
-
-/* struct of a Tree (node or leaf) */
+		
+/**
+ * struct that represents a Tree (node or leaf) 
+ */
 typedef struct _Tree {
   Label Oplabel;         /* Label for the operator */
   short nbChildren; 	/* number of children */
@@ -97,7 +85,6 @@ typedef struct _Tree {
   } u;
 } Tree, *TreeP;
 
- /*LISTE CHAINEE DE VAR (PAS SUFFISANTE POUR LE PROJET)*/ 
  /**
   * Structure that stores a list of pairs (variable, type)
   * We will build list like { (x, Integer), (y, String), (c, MyClass) } that will be used to check scope of variables
@@ -122,7 +109,7 @@ typedef struct _Class{
 	struct _MethDecl* methods;			/* Represent the list of methods of the class */
 
 	bool predef;				/* Is the class a predefined class ? (if yes => no subClass)*/
-	bool isObject;				/* Is the class an Object (static class) ? */
+	bool isObject;				/* Is the class an Object (static class) ?  (object cannot be derived (no SubClass)) */
 
 } Class, *ClassP;
 
@@ -189,13 +176,27 @@ typedef union{
 /* for Bison otherwhise YYSTYPE is an int ! */
 #define YYSTYPE YYSTYPE
 
-	/* Headers of the functions used with the structure */
 
-/* construction for the AST */
+/***************************************************************************************************************************/
+
+								/* Headers of the functions used with the structure */
+
+/***************************************************************************************************************************/
+
+/********************************* Methods relative to the AST (Tree struct) *********************************/
+
+/* Methods used for the construction of the AST */
 TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) */
 TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) */
-TreeP makeLeafClass(Label label, ClassP c);	            /* leaf (class value) */
 TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
 
 /* Printing the AST */
 void printAST(TreeP decls, TreeP main);
+
+
+
+/********************************* Methods relative to the class struct *********************************/
+
+void addMethodToClass(ClassP class, MethodP method);	/* method to add a method to a class */
+void addAttribToClass(ClassP class, VarDeclP var);		/* method to add an attribute to a class */
+

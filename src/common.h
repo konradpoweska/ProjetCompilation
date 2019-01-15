@@ -3,6 +3,6 @@
 
 
 /* Creation d'une superclasse Object ? */
-/* PAS OK : Class Integer = {"Integer", NIL(Class), /*constructeur*/, ... } */
+/* PAS OK : Class Integer = {"Integer", NIL(Class),..., ... } */
 
 void _Init();

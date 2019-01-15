@@ -42,6 +42,48 @@ TreeP makeTree(Label label, int nbChildren, ...) {
   return(tree);
 }
 
+/**
+ * Method to add a method to a class struct (to it's chained list of methods)
+ * @param class, the pointer representing the @ of the class we want to modify
+ * @param method, the poiter to method to add to the class
+ * @return nothing...
+ */
+void addMethodToClass(ClassP class, MethodP method){
+
+	/* We create the node we want to insert */
+	MethDeclP node = NEW(1,MethDecl);
+	node->method=method;
+	node->next=NIL(MethDecl);
+
+	/* We iterate to go to the end of the chained list of methods */
+	MethDeclP* p = &(class->methods);
+	while((*p)->next!=NIL(MethDecl)){
+		p=&((*p)->next);
+	}
+
+	/* we add our method to the list of method */
+	(*p)->next=node;
+	
+}
+
+/**
+ * Method to add an attribute to a class struct (to it's chained list of methods)
+ * @param class, the pointer representing the @ of the class we want to modify
+ * @param var, the poiter to attribute to add to the class
+ * @return nothing...
+ */
+void addAttribToClass(ClassP class, VarDeclP var){
+
+	/* We iterate to go to the end of the chained list of methods */
+	VarDeclP* p = &(class->attributes);
+	while((*p)->next!=NIL(VarDecl)){
+		p=&((*p)->next);
+	}
+
+	/* we add our method to the list of method */
+	(*p)->next=var;
+}
+
 /*int main(){
 	return 0;
 }*/
