@@ -1,15 +1,28 @@
-%token T_IF T_THEN T_ELSE T_CLASS T_EXTENDS T_VAR T_IS T_DEF T_OBJECT T_RETURN T_OVERRIDE T_NEW T_ADD T_SUB T_MULT T_DIV T_AFFECT T_IDENT T_CONST T_COMP T_STRING T_IDENTCLASS
+%token T_IF T_THEN T_ELSE T_CLASS T_EXTENDS T_VAR T_IS T_DEF T_OBJECT T_RETURN T_OVERRIDE T_NEW T_ADD T_SUB T_MULT T_DIV T_AFFECT T_COMP T_IDENTCLASS
+%token <S> T_STRING
+%token <I> T_CONST
+%token <D> T_IDENT
+
+%type <T> 
+
 
 %left T_ADD T_SUB
 %left T_MULT T_DIV
 %nonassoc UNARY
 %nonassoc T_COMP
 
+%{
+#include "struct.h"   
+
+extern int yylex();
+extern void yyerror(); 
+%}
+
 %%
 Program : LDeclsOpt Bloc;
 LDeclsOpt : Class LDeclsOpt | Object LDeclsOpt | ;
 Class : T_CLASS T_IDENTCLASS '(' LParamOpt ')' ExtendsOpt T_IS '{' ListOptDecl DefConstruct ListOptMethod '}';
-ExtendsOpt : T_EXTENDS T_IDENT | ;
+ExtendsOpt : T_EXTENDS T_IDENTCLASS | ;
 LParamOpt : LParam | ;
 LParam : Param','LParam|Param;
 Param : T_VAR T_IDENT ':' T_IDENTCLASS;
