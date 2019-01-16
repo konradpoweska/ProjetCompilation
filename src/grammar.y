@@ -3,7 +3,7 @@
 %token <I> T_CONST
 %token <D> T_IDENT
 
-%type <T> 
+%type <T> LDeclsOpt Class ExtendsOpt LParamOpt LParam Param DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
 
 
 %left T_ADD T_SUB
@@ -12,10 +12,10 @@
 %nonassoc T_COMP
 
 %{
-#include "struct.h"   
+#include "struct.h"
 
 extern int yylex();
-extern void yyerror(); 
+extern void yyerror();
 %}
 
 %%
@@ -36,14 +36,11 @@ Method : Override T_DEF T_IDENT '('LParamOpt')'':'T_IDENTCLASS T_AFFECT Expressi
 Override : T_OVERRIDE | ;
 ClassOpt : ':' T_IDENTCLASS | ;
 Expression : T_CONST | T_IDENT | T_STRING | '(' Expression ')' |'(' T_IDENTCLASS Expression ')' | Selection | Instantiation | Expression T_COMP Expression | Expression T_ADD Expression | Expression T_SUB Expression | Expression T_DIV Expression | Expression T_MULT Expression | T_ADD Expression %prec UNARY | T_SUB Expression %prec UNARY;
-
-
 Selection : Instance'.'T_IDENT;
 Instance : T_IDENT | Selection | Message;
 Instantiation : T_NEW T_IDENTCLASS'('LParamOpt')';
 Message : Instance'.'T_IDENT'('LParamOpt')';
 ListInst : Instruction ListInst | Instruction;
-
 Instruction : Expression';' | Bloc | T_RETURN';' | Affectation | Ifte;
 Bloc : '{' ListOptInstruct '}' | '{' ListDeclVar T_IS ListInst '}';
 ListOptInstruct : Instruction ListOptInstruct | ;
