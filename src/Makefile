@@ -2,8 +2,9 @@ CC = gcc
 CFLAGS = -std=gnu11 -Wall -Wextra -g
 LDFLAGS = -lfl
 
-OBJS = lex.o grammar.y.o
+OBJS = lex.o grammar.y.o common.o
 
+all: compiler
 
 lex.c: lex.l grammar.y.h common.h
 	flex --yylineno -o lex.c lex.l
@@ -23,7 +24,7 @@ compiler: $(OBJS) main.o
 .PHONY: clean cclean
 
 clean:
-	rm -f *.o
+	rm -f *.o grammar.y.* lex.c
 
 cclean: clean
 	rm -f lex_main compiler
