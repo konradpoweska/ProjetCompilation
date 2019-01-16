@@ -1,5 +1,5 @@
 #include "structures.h"
-#include "grammar.tab.h"
+#include "grammar.y.h"
 
 #include <unistd.h>
 #include <stdarg.h>
@@ -14,6 +14,15 @@ int errorCode;
 
 extern int yyparse();
 extern int yylineno;
+
+
+/* yyerror:  fonction importee par Bison et a fournir explicitement.
+ * Elle est appelee quand Bison detecte une erreur syntaxique.
+ * Ici on se contente d'un message minimal.
+ */
+void yyerror(char *ignore) {
+  fprintf(stderr, "Syntax error on line: %d\n", yylineno);
+}
 
 /* Appel:
  *   tp [-option]* programme.txt
