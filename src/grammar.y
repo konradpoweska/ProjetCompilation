@@ -3,8 +3,8 @@
 %token <I> T_CONST
 %token <D> T_IDENT
 
-%type <T> LDeclsOpt Class ExtendsOpt LParamOpt LParam Param DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
-
+/*%type <T> LDeclsOpt Class ExtendsOpt LParamOpt LParam Param DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
+*/
 
 %left T_ADD T_SUB
 %left T_MULT T_DIV
