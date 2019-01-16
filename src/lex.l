@@ -54,6 +54,7 @@ Symbol [;,.:(){}]
   yylval.S = strdup(yytext + 1);
   return T_STRING;
 }
+[A-Z]{LtrInt}* {yylval.S = strdup(yytext); return T_IDENTCLASS;}
 {Letter}{LtrInt}* {yylval.S = strdup(yytext); return T_IDENT;}
 {Integer} {yylval.I = atoi(yytext); return T_CONST;}
 {Symbol} {return yytext[0];}

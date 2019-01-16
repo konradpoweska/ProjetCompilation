@@ -38,6 +38,9 @@ int main(void) {
       case 0: /* EOF */
         printf("Fin de l'analyse lexicale\n");
         return 0;
+      case T_IDENTCLASS:
+        printf("Identificateur de classe:\t\t%s\n", yylval.S);
+        break;
       case T_IDENT:
         printf("Identificateur:\t\t%s\n", yylval.S);
         break;
@@ -91,4 +94,6 @@ int main(void) {
         printf("Token non reconnu:\t\"%d\"\n", token);
     }
   }
+
+  return 1;
 }
