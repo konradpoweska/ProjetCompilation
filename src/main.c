@@ -1,5 +1,6 @@
 #include "structures.h"
 #include "grammar.y.h"
+#include "common.h"
 
 #include <unistd.h>
 #include <stdarg.h>
@@ -15,15 +16,6 @@ int errorCode;
 extern int yyparse();
 extern int yylineno;
 
-
-/* yyerror:  fonction importee par Bison et a fournir explicitement.
- * Elle est appelee quand Bison detecte une erreur syntaxique.
- * Ici on se contente d'un message minimal.
- */
-void yyerror(char *ignore) {
-  fprintf(stderr, "Syntax error on line: %d\n", yylineno);
-}
-
 /* Appel:
  *   tp [-option]* programme.txt
  * Les options doivent apparaitre avant le nom du fichier du programme.
@@ -35,16 +27,16 @@ int main(int argc, char **argv) {
 
   for(i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
-      switch (argv[i][1]) {
-      case 'v': case 'V':
-	verbose = TRUE; continue;
-      case 'e': case 'E':
-	fprintf(stderr, "Syntax: tp -e -v program.txt\n");
-	exit(USAGE_ERROR);
-      default:
-	fprintf(stderr, "Error: Unknown Option: %c\n", argv[i][1]);
-	exit(USAGE_ERROR);
-      }
+        switch (argv[i][1]) {
+            case 'v': case 'V':
+                verbose = TRUE; continue;
+            case 'e': case 'E':
+                fprintf(stderr, "Syntax: tp -e -v program.txt\n");
+                exit(USAGE_ERROR);
+            default:
+                fprintf(stderr, "Error: Unknown Option: %c\n", argv[i][1]);
+                exit(USAGE_ERROR);
+        }
     } else break;
   }
 

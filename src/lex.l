@@ -1,6 +1,6 @@
 %x IN_COMMENT
 %{
-#include "common.h"
+#include "structures.h"
 #include "grammar.y.h"
 extern YYSTYPE yylval;
 extern int yylineno;

@@ -1,3 +1,10 @@
+#ifndef STRUCTURES_H
+#define STRUCTURES_H
+
+
+
+
+
 #include <stdlib.h>
 
 /**
@@ -30,6 +37,12 @@ typedef int bool;
 #define UNEXPECTED	10
 
 /* Definition of the labels for our AST */
+/**
+ *  /!\ WARNING /!\
+ * In the first place (before contextual verif) all the names might just be interpreted as ID
+ * (because we don't know yet what it refers (check the environment to know what it is))
+ *  /!\ WARNING /!\
+ */
 typedef enum _Label{
 	/* Arithmetic Operators (binary Operators) */
 	L_ADD=1,
@@ -52,11 +65,21 @@ typedef enum _Label{
 	L_IFTHENELSE=12,	/* (ternary Operator (3child)) */
 	L_NEW = 13,			/* Creation of a new instance of a class (2 children : 0=ClassName, 1=ListParam) */
 
-	/* A FINIR LES MOTS CLEFS */
 
-	L_CONSTINT = 255,	/* A FINIR */
-	L_CONSTSTR = 256,
-	L_ID = 512/* A FINIR */
+	/* AST Leaf */
+	L_LISTVAR = 14,		/* Label for a List of declaration of variables into our AST (list of decl is a leaf) */
+	L_CONSTINT = 15,	/* Label for integer const */
+	L_CONSTSTR = 16,	/* Label for string const */
+	L_ID = 17,			/* Label for a variable */
+
+	/* AST  Node */
+	L_BLOC = 18,		/* Label for a bloc */
+	L_LISTINST = 19,	/* Label for a list of instruction */
+	L_SELECTION = 20,	/* Selection : ClassObjectName.attribute => 2 children*/
+	L_MESSAGE = 21,		/* Message : ClassObjectName.methodName(ListArg) => 3 children */
+
+
+
 } Label;
 
 
@@ -71,19 +94,6 @@ typedef enum _IdentNature{
 	RESULT
 } IdentNature;
 
-		
-/**
- * struct that represents a Tree (node or leaf) 
- */
-typedef struct _Tree {
-  Label Oplabel;         /* Label for the operator */
-  short nbChildren; 	/* number of children */
-  union {
-    char *name;      		 /* value of leaf if op = ID */
-    struct _Class* type;     /* value of leaf if op = CST */
-    struct _Tree **children; /* Tree of the children of the node */
-  } u;
-} Tree, *TreeP;
 
  /**
   * Structure that stores a list of pairs (variable, type)
@@ -95,17 +105,32 @@ typedef struct _Decl{
 	struct _Decl *next;
 } VarDecl, *VarDeclP;
 
+
+/**
+ * struct that represents a Tree (node or leaf)
+ */
+typedef struct _Tree {
+  Label Oplabel;         /* Label for the operator */
+  short nbChildren; 	/* number of children */
+  union {
+    char *valStr;      		 /* value of leaf if op = CTSSTR */
+    int valInt;			     /* value of leaf if op = CSTINT */
+	VarDeclP ListDecl;		 /* value of leaf if op = LISTVAR */
+    struct _Tree **children; /* Tree of the children of the node */
+  } u;
+} Tree, *TreeP;
+
 /**
  * Structure that represent a class (in our compilation programm)
  */
 typedef struct _Class{
-	
+
 	char* name;					/* Name of the class */
 	struct _Class* superClass;	/* Represents the super class */
 	struct _Method* constructor;/* Represents the class constructor */
 	VarDeclP header;			/* Header of the class */
 	VarDeclP attributes;		/* List of attributes for the class */
-	
+
 	struct _MethDecl* methods;			/* Represent the list of methods of the class */
 
 	bool predef;				/* Is the class a predefined class ? (if yes => no subClass)*/
@@ -119,10 +144,10 @@ typedef struct _Class{
  * @param next; pointer to the next element of the list
  */
 typedef struct _ClassDecl{
-	
+
 	ClassP class;
 	struct _ClassDecl* next;
-	
+
 }ClassDecl, *ClassDeclP;
 
 /**
@@ -132,13 +157,13 @@ typedef struct _Meth{
 	char* name;			 /* name of the method */
 	VarDeclP parameters; /* List of Parameters */
 	ClassP owner; 		 /* class that own the method */
-	
+
 	ClassP returnType;	 /* return type of the method */
 	TreeP body;			 /* Body of the method */
 	bool redef;			 /* Is the method a redefinition ? */
-	
+
 	/*TO be continued.....*/
-	
+
 }Method, *MethodP;
 
 /**
@@ -147,10 +172,10 @@ typedef struct _Meth{
  * @param next; pointer to the next element of the list
  */
 typedef struct _MethDecl{
-	
+
 	MethodP method;
 	struct _MethDecl* next;
-	
+
 }MethDecl, *MethDeclP;
 
 
@@ -158,7 +183,7 @@ typedef struct _MethDecl{
  * First attribute is necessary (for FLEX)
  * other attributes corresponds to the actions associated to the grammar production
  * things like $$ = $1
- * For example $$ = makeTree(...) => needs to have TreeP in this enum 
+ * For example $$ = makeTree(...) => needs to have TreeP in this enum
  * etc.
  */
 typedef union{
@@ -200,3 +225,6 @@ void printAST(TreeP decls, TreeP main);
 void addMethodToClass(ClassP class, MethodP method);	/* method to add a method to a class */
 void addAttribToClass(ClassP class, VarDeclP var);		/* method to add an attribute to a class */
 
+
+
+#endif /* end of include guard: STRUCTURES_H */

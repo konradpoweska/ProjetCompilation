@@ -5,7 +5,7 @@
 * Appel: test_lex < programme.txt
 */
 #include <stdio.h>
-#include "common.h"
+#include "structures.h"
 #include "grammar.y.h"
 
 
