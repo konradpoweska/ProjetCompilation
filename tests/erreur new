@@ -1,0 +1,23 @@
+/*manque un is dans le troisième rang*/
+class Test (var x : Integer, var y : Integer) is
+{
+    def Test (var x : Integer, var y : Integer) {}
+}
+
+/*manque les deux-points après les parentèses*/
+class Test (var x  Integer, var y : Integer) is
+{
+
+}
+
+/*manque une parentèse*/
+class Test var x : Integer, var y : Integer) is
+{
+
+}
+
+/*manque une symbol "var"*/
+class Test (var x : Integer var y : Integer) is
+{
+
+}
