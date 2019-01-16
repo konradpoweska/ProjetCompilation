@@ -1,0 +1,8 @@
+class Etudiant(nom : String, prenom : String, age : Integer, var numEtudiant : Integer)  is
+{
+    def Etudiant(nom: String, prenom: String, age: Integer, var numEtudiant: Integer): Personne(nom, prenom, age,  numEtudiant) is {
+		estInscrit := 0;
+	}
+}
+
+{}

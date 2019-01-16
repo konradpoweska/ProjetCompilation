@@ -3,7 +3,7 @@
 %token <I> T_CONST
 %token <D> T_IDENT
 
-/*%type <T> LDeclsOpt Class ExtendsOpt LParamOpt LParam Param DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
+/*%type <T> LDeclsOpt Class ExtendsOpt LParamDeclOpt LParamDecl ParamDecl DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
 */
 
 %left T_ADD T_SUB
@@ -21,18 +21,21 @@ extern void yyerror();
 %%
 Program : LDeclsOpt Bloc;
 LDeclsOpt : Class LDeclsOpt | Object LDeclsOpt | ;
-Class : T_CLASS T_IDENTCLASS '(' LParamOpt ')' ExtendsOpt T_IS '{' ListOptDecl DefConstruct ListOptMethod '}';
+Class : T_CLASS T_IDENTCLASS '(' LParamDeclOpt ')' ExtendsOpt T_IS '{' ListOptDecl DefConstruct ListOptMethod '}';
 ExtendsOpt : T_EXTENDS T_IDENTCLASS | ;
+LParamDeclOpt : LParamDecl | ;
+LParamDecl : ParamDecl','LParamDecl|ParamDecl ;
+ParamDecl : VarOpt T_IDENT ':' T_IDENTCLASS;
+VarOpt : T_VAR | ;
 LParamOpt : LParam | ;
-LParam : Param','LParam|Param;
-Param : T_VAR T_IDENT ':' T_IDENTCLASS;
-DefConstruct : T_DEF T_IDENT '(' LParamOpt ')' ConstructSuper T_IS Bloc;
+LParam : T_IDENT','LParam|T_IDENT|T_CONST','LParam| T_CONST ;
+DefConstruct : T_DEF T_IDENTCLASS '(' LParamDeclOpt ')' ConstructSuper T_IS Bloc;
 ConstructSuper : ':' T_IDENTCLASS '(' LParamOpt ')'| ;
 ListOptDecl : Decl ListOptDecl| ;
 Object : T_OBJECT T_IDENTCLASS T_IS '{' ListOptDecl DefConstruct ListOptMethod '}';
 Decl : T_VAR T_IDENT ':' T_IDENTCLASS';';
 ListOptMethod : Method ListOptMethod| ;
-Method : Override T_DEF T_IDENT '('LParamOpt')'':'T_IDENTCLASS T_AFFECT Expression | Override T_DEF T_IDENT'('LParamOpt')' ClassOpt T_IS Bloc;
+Method : Override T_DEF T_IDENT '('LParamDeclOpt')'':'T_IDENTCLASS T_AFFECT Expression ';' | Override T_DEF T_IDENT'('LParamDeclOpt')' ClassOpt T_IS Bloc;
 Override : T_OVERRIDE | ;
 ClassOpt : ':' T_IDENTCLASS | ;
 Expression : T_CONST | T_IDENT | T_STRING | '(' Expression ')' |'(' T_IDENTCLASS Expression ')' | Selection | Instantiation | Expression T_COMP Expression | Expression T_ADD Expression | Expression T_SUB Expression | Expression T_DIV Expression | Expression T_MULT Expression | T_ADD Expression %prec UNARY | T_SUB Expression %prec UNARY;
