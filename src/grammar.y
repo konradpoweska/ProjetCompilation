@@ -12,7 +12,7 @@
 %nonassoc T_COMP
 
 %{
-#include "struct.h"
+#include "structures.h"
 
 extern int yylex();
 extern void yyerror();

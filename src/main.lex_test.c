@@ -6,7 +6,7 @@
 */
 #include <stdio.h>
 #include "common.h"
-#include "grammar.tab.h"
+#include "grammar.y.h"
 
 
 

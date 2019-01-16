@@ -1,7 +1,7 @@
 %x IN_COMMENT
 %{
-#include "../src/common.h"
-#include "grammar.tab.h"
+#include "common.h"
+#include "grammar.y.h"
 extern YYSTYPE yylval;
 extern int yylineno;
 %}
