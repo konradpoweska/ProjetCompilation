@@ -1,0 +1,5 @@
+/*nom de classe minuscule*/
+class test (var x : Integer var y : Integer) is
+{
+
+}
