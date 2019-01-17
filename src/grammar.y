@@ -50,5 +50,5 @@ ListOptInstruct : Instruction ListOptInstruct | ;
 ListDeclVar : DeclVar ListDeclVar | DeclVar;
 DeclVar : T_IDENT ':' T_IDENTCLASS AffectOpt';';
 AffectOpt : T_AFFECT Expression | ;
-Affectation : T_IDENT T_AFFECT Expression';';
+Affectation : Instance T_AFFECT Expression';';
 Ifte : T_IF Expression T_THEN Instruction T_ELSE Instruction;
