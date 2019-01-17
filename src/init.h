@@ -4,8 +4,9 @@
 #include "structures.h"
 
 
-/* Creation d'une superclasse Object ? */
-/* PAS OK : Class Integer = {"Integer", NIL(Class),..., ... } */
+/* SUPERCLASSE Object ? */
+Class Integer;
+Class String;
 
 void _Init();
 

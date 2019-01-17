@@ -1,40 +1,10 @@
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
 
-
-
-
-
+#include <stdarg.h> /* for undifined number of param */
 #include <stdlib.h>
+#include "common.h"
 
-/**
- * NEW : Macro used for dynamic memory allocation.
- * @param howmany, number of object to create
- * @param type, type of the structure to create (not the pointer but the struct)
- * @return the new pointer of the structure
- */
-#define NEW(howmany, type) (type *) calloc((unsigned) howmany, sizeof(type))
-
-/**
- * NIL : Macro used for dynamic memory allocation.
- * @param type, type of the structure to create (not the pointer but the struct)
- * @return the NIL pointer corresponding to the structure
- */
-#define NIL(type) (type *) 0
-
-#define TRUE 1
-#define FALSE 0
-typedef int bool;
-
-
-/* Error code */
-#define NO_ERROR	0
-#define USAGE_ERROR	1
-#define LEXICAL_ERROR	2
-#define SYNTAX_ERROR    3
-#define CONTEXT_ERROR	4
-#define EVAL_ERROR	5
-#define UNEXPECTED	10
 
 /* Definition of the labels for our AST */
 /**
@@ -111,11 +81,12 @@ typedef struct _Decl{
  */
 typedef struct _Tree {
   Label Oplabel;         /* Label for the operator */
-  short nbChildren; 	/* number of children */
+  short nbChildren; 	 /* number of children */
   union {
-    char *valStr;      		 /* value of leaf if op = CTSSTR */
+    char *valStr;      		 /* value of leaf if op = CSTSTR */
     int valInt;			     /* value of leaf if op = CSTINT */
 	VarDeclP ListDecl;		 /* value of leaf if op = LISTVAR */
+
     struct _Tree **children; /* Tree of the children of the node */
   } u;
 } Tree, *TreeP;
@@ -131,7 +102,7 @@ typedef struct _Class{
 	VarDeclP header;			/* Header of the class */
 	VarDeclP attributes;		/* List of attributes for the class */
 
-	struct _MethDecl* methods;			/* Represent the list of methods of the class */
+	struct _MethDecl* methods;	/* Represent the list of methods of the class */
 
 	bool predef;				/* Is the class a predefined class ? (if yes => no subClass)*/
 	bool isObject;				/* Is the class an Object (static class) ?  (object cannot be derived (no SubClass)) */
@@ -208,9 +179,9 @@ typedef union{
 
 /***************************************************************************************************************************/
 
-/********************************* Methods relative to the AST (Tree struct) *********************************/
+/********************************* Functions relative to the AST (Tree struct) *********************************/
 
-/* Methods used for the construction of the AST */
+/* Functions used for the construction of the AST */
 TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) */
 TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) */
 TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
@@ -219,11 +190,38 @@ TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
 void printAST(TreeP decls, TreeP main);
 
 
+/********************************* Functions relative to the class struct *********************************/
 
-/********************************* Methods relative to the class struct *********************************/
+/* ""Constructor"" of a class structure 
+ * NOTE : All pointers can be NIL(...) if we don't have all the info at the construction 
+ * NOTE2: _param = it is a parameter of the constructor (not a field of the struct yet) (for the implementation of the function)
+ */
+ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP constructor_param, VarDeclP header_param, 
+						VarDeclP attributes_param, MethDeclP methods_param, bool predef_param, bool isObject_param);
 
-void addMethodToClass(ClassP class, MethodP method);	/* method to add a method to a class */
-void addAttribToClass(ClassP class, VarDeclP var);		/* method to add an attribute to a class */
+void addMethodToClass(ClassP class, MethodP method);		/* function to add a method to a class */
+void addMethodsToClass(ClassP class, MethDeclP methods);	/* function to add a list of method to a class */
+void addAttribToClass(ClassP class, VarDeclP var);			/* function to add an attribute to a class */
+
+/********************************* Functions relative to the list of class struct (ClassDecl) *********************************/
+
+void addClassToList(ClassDeclP list, ClassP class);	/* function to add a class to a list of class */
+
+
+/********************************* Functions relative to the method struct *********************************/
+
+/* ""Constructor"" of a method structure 
+ * NOTE : Only return type can be NIL(...) => all the rest must not be NIL(...) => MUST BE CHECK IN THE IMPLEMENTATION
+ * NOTE2: _param = it is a parameter of the constructor (not a field of the struct yet) (for the implementation of the function)
+ */
+MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, ClassP owner_param,
+						 ClassP returnType_param, TreeP body_param, bool redef_param);
+
+
+/********************************* Functions relative to the list of method struct (MethDecl) *********************************/
+
+void addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
+void addMethodsToList(MethDeclP list, unsigned int count, ...);	/* function to add multiples methods to a list of method */
 
 
 
