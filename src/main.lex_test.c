@@ -39,7 +39,7 @@ int main(void) {
         printf("Fin de l'analyse lexicale\n");
         return 0;
       case T_IDENTCLASS:
-        printf("Identificateur de classe:\t\t%s\n", yylval.S);
+        printf("Ident. de classe:\t%s\n", yylval.S);
         break;
       case T_IDENT:
         printf("Identificateur:\t\t%s\n", yylval.S);
