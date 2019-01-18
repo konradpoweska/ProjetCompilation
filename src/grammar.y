@@ -1,7 +1,8 @@
-%token T_IF T_THEN T_ELSE T_CLASS T_EXTENDS T_VAR T_IS T_DEF T_OBJECT T_RETURN T_OVERRIDE T_NEW T_ADD T_SUB T_MULT T_DIV T_AFFECT T_COMP T_IDENTCLASS
+%token T_IF T_THEN T_ELSE T_CLASS T_EXTENDS T_VAR T_IS T_DEF T_OBJECT T_RETURN T_OVERRIDE T_NEW T_ADD T_SUB T_MULT T_DIV T_AFFECT T_COMP  T_CONCAT
 %token <S> T_STRING
 %token <I> T_CONST
 %token <D> T_IDENT
+%token <D> T_IDENTCLASS
 
 /*%type <T> LDeclsOpt Class ExtendsOpt LParamDeclOpt LParamDecl ParamDecl DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
 */
@@ -27,28 +28,29 @@ LParamDeclOpt : LParamDecl | ;
 LParamDecl : ParamDecl','LParamDecl|ParamDecl ;
 ParamDecl : VarOpt T_IDENT ':' T_IDENTCLASS;
 VarOpt : T_VAR | ;
-LParamOpt : LParam | ;
-LParam : T_IDENT','LParam|T_IDENT|T_CONST','LParam| T_CONST ;
+LParamOpt : LParam  | ;
+LParam : Expression','LParam|Expression ;
 DefConstruct : T_DEF T_IDENTCLASS '(' LParamDeclOpt ')' ConstructSuper T_IS Bloc;
 ConstructSuper : ':' T_IDENTCLASS '(' LParamOpt ')'| ;
 ListOptDecl : Decl ListOptDecl| ;
-Object : T_OBJECT T_IDENTCLASS T_IS '{' ListOptDecl DefConstruct ListOptMethod '}';
+Object : T_OBJECT T_IDENTCLASS T_IS '{' ListOptDecl DefConstructObj ListOptMethod '}';
+DefConstructObj : T_DEF T_IDENTCLASS T_IS Bloc;
 Decl : T_VAR T_IDENT ':' T_IDENTCLASS';';
 ListOptMethod : Method ListOptMethod| ;
-Method : Override T_DEF T_IDENT '('LParamDeclOpt')'':'T_IDENTCLASS T_AFFECT Expression ';' | Override T_DEF T_IDENT'('LParamDeclOpt')' ClassOpt T_IS Bloc;
+Method : Override T_DEF T_IDENT '('LParamDeclOpt')'':'T_IDENTCLASS T_AFFECT Expression | Override T_DEF T_IDENT'('LParamDeclOpt')' ClassOpt T_IS Bloc;
 Override : T_OVERRIDE | ;
 ClassOpt : ':' T_IDENTCLASS | ;
-Expression : T_CONST | T_IDENT | T_STRING | '(' Expression ')' |'(' T_IDENTCLASS Expression ')' | Selection | Instantiation | Expression T_COMP Expression | Expression T_ADD Expression | Expression T_SUB Expression | Expression T_DIV Expression | Expression T_MULT Expression | T_ADD Expression %prec UNARY | T_SUB Expression %prec UNARY;
+Expression : '(' Expression ')' |'(' T_IDENTCLASS Expression ')' | Instance | Instantiation| Expression T_COMP Expression | Expression T_ADD Expression | Expression T_SUB Expression | Expression T_DIV Expression | Expression T_MULT Expression | T_ADD Expression %prec UNARY | T_SUB Expression %prec UNARY;
 Selection : Instance'.'T_IDENT;
-Instance : T_IDENT | Selection | Message;
+Instance : T_IDENT | T_CONST | Selection | Message | T_STRING;
 Instantiation : T_NEW T_IDENTCLASS'('LParamOpt')';
-Message : Instance'.'T_IDENT'('LParamOpt')';
+Message : Instance'.'T_IDENT'('LParamOpt')' | T_IDENTCLASS'.'T_IDENT'('LParamOpt')';
 ListInst : Instruction ListInst | Instruction;
 Instruction : Expression';' | Bloc | T_RETURN';' | Affectation | Ifte;
-Bloc : '{' ListOptInstruct '}' | '{' ListDeclVar T_IS ListInst '}';
+Bloc : '{' ListOptInstruct '}'  | '{' ListDeclVar T_IS ListInst '}';
 ListOptInstruct : Instruction ListOptInstruct | ;
-ListDeclVar : DeclVar ListDeclVar | DeclVar;
-DeclVar : T_IDENT ':' T_IDENTCLASS AffectOpt';';
+ListDeclVar : DeclVar ListDeclVar | DeclVar ;
+DeclVar : T_IDENT ':' T_IDENTCLASS AffectOpt';'  ;
 AffectOpt : T_AFFECT Expression | ;
 Affectation : Instance T_AFFECT Expression';';
 Ifte : T_IF Expression T_THEN Instruction T_ELSE Instruction;

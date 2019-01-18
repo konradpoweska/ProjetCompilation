@@ -35,13 +35,14 @@ object Test is {
 		ne := e.getNumEtudiant();
 		s := e.getStatut(); 
 		n.print(); " ".print(); pn.print(); ": ".print(); ne.print();
-		if s = 0 else " Ne pas s'inscrire.".println(); 
+		if s = 0 then " Ne pas s'inscrire.".println(); 
 		else "Inscrit.".println();
 	}
 }
 
 {
 	e: Etudiant := new Etudiant("ABC", "def", 22, 20190110);
+	is
 	Test.test(e);
 	e.inscrire();
 	Test.test(e);
