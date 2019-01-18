@@ -15,6 +15,7 @@
  */
 typedef enum _Label{
 	/* Arithmetic Operators (binary Operators) */
+	L_CONCAT =0,
 	L_ADD=1,
 	L_SUB=2,
 	L_MULT=3,
@@ -192,11 +193,11 @@ void printAST(TreeP decls, TreeP main);
 
 /********************************* Functions relative to the class struct *********************************/
 
-/* ""Constructor"" of a class structure 
- * NOTE : All pointers can be NIL(...) if we don't have all the info at the construction 
+/* ""Constructor"" of a class structure
+ * NOTE : All pointers can be NIL(...) if we don't have all the info at the construction
  * NOTE2: _param = it is a parameter of the constructor (not a field of the struct yet) (for the implementation of the function)
  */
-ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP constructor_param, VarDeclP header_param, 
+ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP constructor_param, VarDeclP header_param,
 						VarDeclP attributes_param, MethDeclP methods_param, bool predef_param, bool isObject_param);
 
 void addMethodToClass(ClassP class, MethodP method);		/* function to add a method to a class */
@@ -205,12 +206,13 @@ void addAttribToClass(ClassP class, VarDeclP var);			/* function to add an attri
 
 /********************************* Functions relative to the list of class struct (ClassDecl) *********************************/
 
-void addClassToList(ClassDeclP list, ClassP class);	/* function to add a class to a list of class */
+void addClassToList(ClassDeclP list, ClassP class);		 /* function to add a class to a list of class */
+ClassP getClassInList(ClassDeclP list, char* className); /* function to find a class in a list of class */
 
 
 /********************************* Functions relative to the method struct *********************************/
 
-/* ""Constructor"" of a method structure 
+/* ""Constructor"" of a method structure
  * NOTE : Only return type can be NIL(...) => all the rest must not be NIL(...) => MUST BE CHECK IN THE IMPLEMENTATION
  * NOTE2: _param = it is a parameter of the constructor (not a field of the struct yet) (for the implementation of the function)
  */
@@ -222,7 +224,14 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 
 void addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
 void addMethodsToList(MethDeclP list, unsigned int count, ...);	/* function to add multiples methods to a list of method */
+MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method */
 
+/* Predef classes */
+extern Class Integer;
+extern Class String;
+
+/* A list that stores all the classes of the programm in order to use them for context verif */
+extern ClassDeclP ClassList;
 
 
 #endif /* end of include guard: STRUCTURES_H */
