@@ -88,6 +88,9 @@ int main(void) {
       case T_STRING:
         printf("Chaîne de caractères:\t%s\n", yylval.S);
         break;
+      case T_CONCAT:
+        printf("Oper. de concaténation:\t%s\n", yytext);
+        break;
       case T_AFFECT: printf("Symbole d'affectation\t:=\n");
         break;
       default:

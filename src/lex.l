@@ -40,6 +40,7 @@ Symbol [;,.:(){}]
 "-" {return T_SUB;}
 "*" {return T_MULT;}
 "/" {return T_DIV;}
+"&" {return T_CONCAT;}
 "<>" {yylval.C = L_NOTEQ; return T_COMP;}
 "<=" {yylval.C = L_INFEQ; return T_COMP;}
 ">=" {yylval.C = L_SUPEQ; return T_COMP;}
