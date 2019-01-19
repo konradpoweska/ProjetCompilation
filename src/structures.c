@@ -5,6 +5,16 @@
 #include <string.h>
 
 #include "structures.h"
+#include "common.h"
+#include "init.h"
+
+
+/* Predef classes */
+extern Class Integer;
+extern Class String;
+
+/* A list that stores all the classes of the programm in order to use them for context verif */
+extern ClassDeclP ClassList;
 
 
 /********************************* Functions relative to the AST (Tree struct) *********************************/
@@ -70,17 +80,17 @@ void printAST(TreeP decls, TreeP main){
 ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP constructor_param, VarDeclP header_param,
 						VarDeclP attributes_param, MethDeclP methods_param, bool predef_param, bool isObject_param){
 
-	if(className == NIL(char)){
+	if(className_param == NIL(char)){
 		fprintf(stderr, "ERROR : INVALID EMPTY CLASSNAME !\n");
 		exit(EXIT_FAILURE);
 	}
 
 	/* We construct the class */
-	ClassP class = NEW(Class);
+	ClassP class = NEW(1,Class);
 
 	class->name = className_param;
 	class->superClass = superClass_param;
-	class->Constructor = constructor_param;
+	class->constructor = constructor_param;
 	class->header = header_param;
 	class->attributes = attributes_param;
 
@@ -104,21 +114,8 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
  */
 void addMethodToClass(ClassP class, MethodP method){
 
-	/* TODO : CHANGE AND CALL addMethodToList(..) */
-
-	/* We create the node we want to insert */
-	MethDeclP node = NEW(1,MethDecl);
-	node->method=method;
-	node->next=NIL(MethDecl);
-
-	/* We iterate to go to the end of the chained list of methods */
-	MethDeclP* p = &(class->methods);
-	while((*p)->next!=NIL(MethDecl)){
-		p=&((*p)->next);
-	}
-
-	/* we add our method to the list of methods */
-	(*p)->next=node;
+	/* We add the method to the methods of the class */
+	addMethodToList(class->methods, method);
 
 }
 
@@ -131,7 +128,7 @@ void addMethodToClass(ClassP class, MethodP method){
 void addMethodsToClass(ClassP class, MethDeclP methods){
 
 	/* If not an empty list of methods*/
-	if(methods!=NIL(MethDecl)){
+	if(methods!=NIL(MethDecl) && methods->method != NIL(Method)){
 
 		/* We iterate and add those methods */
 		MethDeclP* p =&(methods);
@@ -144,8 +141,7 @@ void addMethodsToClass(ClassP class, MethDeclP methods){
 
 }
 
-	/* rechain the list corectly */
-	(*p)->next = var;
+
 /**
  * Function to add an attribute to a class struct (to it's chained list of attributes)
  * @param class, the pointer representing the @ of the class we want to modify
@@ -184,12 +180,12 @@ void addClassToList(ClassDeclP list, ClassP class){
 
 	/* We iterate to go to the end of the chained list of class */
 	ClassDeclP* p = &(list->next);
-	while((*p)->next!=NIL(MethDecl)){
+	while((*p)->next!=NIL(ClassDecl)){
 		p=&((*p)->next);
 	}
 
 	/* rechain the list corectly */
-	ClassDeclP node;
+	ClassDeclP node = NEW(1,ClassDecl);
 	node->class = class;
 	node->next = NIL(ClassDecl);
 
@@ -204,18 +200,18 @@ void addClassToList(ClassDeclP list, ClassP class){
  */
 ClassP getClassInList(ClassDeclP list, char* className){
 
-	/* If no class def yet */
+	/* If no class defined yet */
 	if(list->class==NIL(Class)){
 		return NIL(Class);
 	}
 
 	/* We iterate to find the class into the chained list of class */
 	ClassDeclP* p = &(list->next);
-	while((*p)->next!=NIL(MethDecl)){
+	while((*p)->next!=NIL(ClassDecl)){
 
 		/* if we find the class => return */
-		if(strcmp(className, (*p)->name)){
-			return (*p);
+		if(strcmp(className, (*p)->class->name)){
+			return (*p)->class;
 		}
 		p=&((*p)->next);
 	}
@@ -229,8 +225,13 @@ ClassP getClassInList(ClassDeclP list, char* className){
 
 
 MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, ClassP owner_param,
-						 classP returnType_param, TreeP body_param, bool redef_param){
+						 ClassP returnType_param, TreeP body_param, bool redef_param){
 
+
+	if(methodName_param == NIL(char)){
+		fprintf(stderr, "ERROR : INVALID EMPTY METHOD NAME !\n");
+		exit(EXIT_FAILURE);
+	}
 
 	/* TODO */
 	return NIL(Method);
@@ -240,16 +241,32 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 
 /********************************* Functions relative to the list of method struct (MethDecl) *********************************/
 
+
+/**
+ * Function that adds a method to a list of methods
+ * @param list, the list where we will add our method
+ * @param method, the pointer of the method to add
+ * @return nothing...
+ */
 void addMethodToList(MethDeclP list, MethodP method){
 
+	/* Empty list case */
+	if(list->method==NIL(Method)){
+		list->method = method;
+		list->next = NIL(MethDecl);
+		return;
+	}
+
 	/* We iterate to go to the end of the chained list of methods */
-	MethDeclP* p = &(class->methods);
+	MethDeclP* p = &(list);
+
 	while((*p)->next!=NIL(MethDecl)){
 		p=&((*p)->next);
 	}
 
-	MethDeclP node;
+	MethDeclP node = NEW(1,MethDecl);
 	node->method = method;
+	node->next = NIL(MethDecl);
 
 	/* we add our method to the list of methods */
 	(*p)->next=node;
@@ -277,8 +294,28 @@ void addMethodsToList(MethDeclP list, int count, ...){
 
 }
 
-/* function to find a method in a list of method */
+/* Function to find a method in a list of method 
+ * @param list, the list we are searching in
+ * @param methodName, the name of the method we are looking for
+ * @return, the method pointer (if found), NIL(Method) otherwhise
+*/
 MethodP getMethodInList(MethDeclP list, char* methodName){
-	/* TODO */
+
+	/* If no method in the list yet */
+	if(list->method==NIL(Method)){
+		return NIL(Method);
+	}
+
+	/* We iterate to find the class into the chained list of class */
+	MethDeclP* p = &(list->next);
+	while((*p)->next!=NIL(MethDecl)){
+
+		/* if we find the class => return */
+		if(strcmp(methodName, (*p)->method->name)){
+			return (*p)->method;
+		}
+		p=&((*p)->next);
+	}
+
 	return NIL(Method);
 }

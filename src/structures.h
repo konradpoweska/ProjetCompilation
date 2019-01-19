@@ -99,7 +99,7 @@ typedef struct _Class{
 
 	char* name;					/* Name of the class */
 	struct _Class* superClass;	/* Represents the super class */
-	struct _Method* constructor;/* Represents the class constructor */
+	struct _Meth* constructor;/* Represents the class constructor */
 	VarDeclP header;			/* Header of the class */
 	VarDeclP attributes;		/* List of attributes for the class */
 
@@ -223,15 +223,7 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 /********************************* Functions relative to the list of method struct (MethDecl) *********************************/
 
 void addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
-void addMethodsToList(MethDeclP list, unsigned int count, ...);	/* function to add multiples methods to a list of method */
+void addMethodsToList(MethDeclP list, int count, ...);			/* function to add multiples methods to a list of method */
 MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method */
-
-/* Predef classes */
-extern Class Integer;
-extern Class String;
-
-/* A list that stores all the classes of the programm in order to use them for context verif */
-extern ClassDeclP ClassList;
-
 
 #endif /* end of include guard: STRUCTURES_H */
