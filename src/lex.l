@@ -3,7 +3,43 @@
 #include "structures.h"
 #include "grammar.y.h"
 extern YYSTYPE yylval;
-extern int yylineno;
+
+char* parseString(char* s) {
+  char *res = calloc(strlen(s), sizeof(char)),
+       *r = res; // copy
+
+  if(*s == '"') s++; // skip the beginning quote mark
+
+  while(*s) {
+    if(*s == '"') { // end of string
+      break;
+    }
+    else if(*s == '\\') { // escape character
+      s++;
+      switch(*s) {
+        case 'a': *(r++) = '\a'; break;
+        case 'b': *(r++) = '\b'; break;
+        case 'n': *(r++) = '\n'; break;
+        case 'r': *(r++) = '\r'; break;
+        case 't': *(r++) = '\t'; break;
+        case 'f': *(r++) = '\f'; break;
+        case 'v': *(r++) = '\v'; break;
+        case '0': *(r++) = '\0'; break;
+        case '\\': *(r++) = '\\'; break;
+        case '\'': *(r++) = '\''; break;
+        case '"': *(r++) = '"'; break;
+        default: fprintf(stderr, "Warning: Unknown escaped character \"\\%c\" ignored\n", *s);
+      }
+      s++;
+      continue;
+    }
+    else *(r++) = *(s++);
+  }
+
+  *r = 0;
+  return res;
+}
+
 %}
 
 Integer [0-9]+
@@ -14,13 +50,11 @@ Symbol [;,.:(){}]
 
 %%
 "//".*$ { /* inline comment */ }
-
 "/*" { BEGIN(IN_COMMENT); /* multiline comment */ }
 <IN_COMMENT>{
 "*/"      BEGIN(INITIAL);
-[^*\n]+   // eat comment in chunks
+[^*]+     // eat comment in chunks
 "*"       // eat the lone star
-\n        yylineno++;
 }
 
 {Whitespace}+ {/* ignore */}
@@ -48,13 +82,12 @@ Symbol [;,.:(){}]
 "<" {yylval.C = L_INF; return T_COMP;}
 ">" {yylval.C = L_SUP; return T_COMP;}
 "=" {yylval.C = L_EQ; return T_COMP;}
-\"[^"]*\" {
-  { char* s = yytext; // remove quotation marks
-  do s++; while(*s != '"');
-  *s = 0; }
-  yylval.S = strdup(yytext + 1);
+
+\"(\\\"|[^\"])*\" {
+  yylval.S = parseString(yytext);
   return T_STRING;
 }
+
 [A-Z]{LtrInt}* {yylval.S = strdup(yytext); return T_IDENTCLASS;}
 {Letter}{LtrInt}* {yylval.S = strdup(yytext); return T_IDENT;}
 {Integer} {yylval.I = atoi(yytext); return T_CONST;}
