@@ -1,31 +1,14 @@
-/*
-* Un petit programme de demonstration qui n'utilise que l'analyse lexicale.
-* Permet principalement de tester la correction de l'analyseur lexical et de
-* l'interface entre celui-ci et le programme qui l'appelle.
-* Appel: test_lex < programme.txt
-*/
+// Usage: test_lex < program.txt
 #include <stdio.h>
 #include "structures.h"
 #include "grammar.y.h"
 
-
-
-
-/* Fonction appelee par le programme principal pour obtenir l'unite lexicale
-* suivante. Elle est produite par Flex (fichier tp_l.c)
-*/
+// Given by Flex, in generated lex.c
 extern int yylex (void);
-
-/* Le texte associe au token courant: defini et mis a jour dans tp_l.c */
 extern char *yytext;
-
-/* Le numero de ligne courant : defini et mis a jour dans tp_l.c */
 extern int yylineno;
 
-/* Variable pour interfacer flex avec le programme qui l'appelle, notamment
-* pour transmettre de l'information, en plus du type d'unite reconnue.
-* Le type YYSTYPE est defini dans tp.h.
-*/
+// Variable (union) to store token data, used in lex.l
 YYSTYPE yylval;
 
 int main(void) {
@@ -33,20 +16,25 @@ int main(void) {
 
   while (1) {
     token = yylex();
+    printf("%3d| ", yylineno);
 
     switch (token) {
       case 0: /* EOF */
-        printf("Fin de l'analyse lexicale\n");
+        printf("End of file\n");
         return 0;
+
       case T_IDENTCLASS:
-        printf("Ident. de classe:\t%s\n", yylval.S);
+        printf("Class identificator:\t%s\n", yylval.S);
         break;
+
       case T_IDENT:
-        printf("Identificateur:\t\t%s\n", yylval.S);
+        printf("Identificator:\t\t%s\n", yylval.S);
         break;
+
       case T_CONST:
-        printf("Constante:\t\t%d\n", yylval.I);
+        printf("Constant:\t\t\t%d\n", yylval.I);
         break;
+
       case T_IF:
       case T_THEN:
       case T_ELSE:
@@ -59,21 +47,21 @@ int main(void) {
       case T_RETURN:
       case T_OVERRIDE:
       case T_NEW:
-        printf("Mot-clef:\t\t%s\n",  yytext);
+        printf("Keyword:\t\t\t%s\n",  yytext);
         break;
-      case ';': case ',': case '.': case ':': case '(': case ')': case '{': case '}':
-        printf("Symbole:\t\t%s\n",  yytext);
+
+      case ';': case ',': case '.': case ':':
+      case '(': case ')': case '{': case '}':
+        printf("Symbol:\t\t\t%s\n",  yytext);
         break;
-      case T_ADD:
-        printf("Op. arithmetique\t+\n"); break;
-      case T_SUB:
-        printf("Op. arithmetique\t-\n"); break;
-      case T_MULT:
-        printf("Op. arithmetique\t*\n"); break;
-      case T_DIV:
-        printf("Op. arithmetique\t/\n"); break;
+
+      case T_ADD: printf("Arithmetic operator:\t+\n"); break;
+      case T_SUB: printf("Arithmetic operator:\t-\n"); break;
+      case T_MULT: printf("Arithmetic operator:\t*\n"); break;
+      case T_DIV: printf("Arithmetic operator:\t/\n"); break;
+
       case T_COMP:
-        printf("Op. de comparaison\t");
+        printf("Comparaison operator:\t");
         switch(yylval.C) {
           case L_NOTEQ: printf("<>"); break;
           case L_EQ: printf("="); break;
@@ -81,20 +69,25 @@ int main(void) {
           case L_INFEQ: printf("<="); break;
           case L_SUP: printf(">"); break;
           case L_SUPEQ: printf(">="); break;
-          default: printf("inconnu de code: %d", yylval.C);
+          default: printf("unknown: %d", yylval.C);
         }
         printf("\n");
         break;
+
       case T_STRING:
-        printf("Chaîne de caractères:\t%s\n", yylval.S);
+        printf("String:\t\t\t\"%s\"\n", yylval.S);
         break;
+
       case T_CONCAT:
-        printf("Oper. de concaténation:\t%s\n", yytext);
+        printf("Concatenation operator:\t&\n");
         break;
-      case T_AFFECT: printf("Symbole d'affectation\t:=\n");
+
+      case T_AFFECT:
+        printf("Affectation symbol:\t:=\n");
         break;
+
       default:
-        printf("Token non reconnu:\t\"%d\"\n", token);
+        printf("Unrecognized token:\t\"%d\"\n", token);
     }
   }
 
