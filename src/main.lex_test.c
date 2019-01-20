@@ -24,11 +24,11 @@ int main(void) {
         return 0;
 
       case T_IDENTCLASS:
-        printf("Class identificator:\t%s\n", yylval.S);
+        printf("Class identifier:\t\t%s\n", yylval.S);
         break;
 
       case T_IDENT:
-        printf("Identificator:\t\t%s\n", yylval.S);
+        printf("Identifier:\t\t%s\n", yylval.S);
         break;
 
       case T_CONST:
@@ -61,7 +61,7 @@ int main(void) {
       case T_DIV: printf("Arithmetic operator:\t/\n"); break;
 
       case T_COMP:
-        printf("Comparaison operator:\t");
+        printf("Comparison operator:\t");
         switch(yylval.C) {
           case L_NOTEQ: printf("<>"); break;
           case L_EQ: printf("="); break;
@@ -83,7 +83,7 @@ int main(void) {
         break;
 
       case T_AFFECT:
-        printf("Affectation symbol:\t:=\n");
+        printf("Assignment symbol:\t:=\n");
         break;
 
       default:
