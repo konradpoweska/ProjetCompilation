@@ -1,31 +1,38 @@
 CC = gcc
-CFLAGS = -std=gnu11 -Wall -Wextra -g
+CFLAGS = -std=gnu11 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -g
 LDFLAGS = -lfl
 
-OBJS = lex.o grammar.y.o common.o
 
-all: compiler
+# A file containing a main() function must be prefixed by "main."
+SRCS = $(wildcard *.c) grammar.y.c lex.c
+HDRS = $(wildcard *.h) grammar.y.h
+
+# List of modules (.o files), except those containing a main() function
+OBJS = $(filter-out main.%,$(SRCS:.c=.o))
+
+# An executables called xx will get its main() from main.xx.c
+EXEC = $(patsubst main.%.c, %, $(filter main.%, $(SRCS)))
 
 
-# executable building
-lex_test: $(OBJS) main.lex_test.o
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-compiler: $(OBJS) main.o
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-
-# compiler rules
-%.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+all: $(EXEC)
 
 
 # specific
-lex.c: lex.l grammar.y.h common.h
-	flex --yylineno -o lex.c lex.l
+lex.c: lex.l
+	flex --yylineno -o $@ $<
 
-grammar.y.c grammar.y.h : grammar.y
-	bison -v -d -o grammar.y.c grammar.y
+grammar.y.c grammar.y.h : grammar.y structures.h
+	bison -v -d -o grammar.y.c $<
+
+
+# compiler rules
+%.o: %.c $(HDRS)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+
+# executable building
+$(EXEC): %: main.%.o $(OBJS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 
 # cleaning rules
@@ -35,4 +42,4 @@ clean:
 	rm -f *.o grammar.y.* lex.c
 
 cclean: clean
-	rm -f lex_main compiler
+	rm -f $(EXEC)
