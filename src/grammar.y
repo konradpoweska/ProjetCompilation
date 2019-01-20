@@ -6,11 +6,13 @@
 
 /*%type <T> LDeclsOpt Class ExtendsOpt LParamDeclOpt LParamDecl ParamDecl DefConstruct ConstructSuper ListOptDecl Object Decl ListOptMethod Method Override ClassOpt Expression Selection Instance Instantiation Message ListInst Instruction Bloc ListOptInstruct ListDeclVar DeclVar AffectOpt Affectation Ifte
 */
-
+%nonassoc T_COMP
+%left T_CONCAT
 %left T_ADD T_SUB
 %left T_MULT T_DIV
+
 %nonassoc UNARY
-%nonassoc T_COMP
+
 
 %{
 #include "structures.h"
@@ -40,9 +42,9 @@ ListOptMethod : Method ListOptMethod| ;
 Method : Override T_DEF T_IDENT '('LParamDeclOpt')'':'T_IDENTCLASS T_AFFECT Expression | Override T_DEF T_IDENT'('LParamDeclOpt')' ClassOpt T_IS Bloc;
 Override : T_OVERRIDE | ;
 ClassOpt : ':' T_IDENTCLASS | ;
-Expression : '(' Expression ')' |'(' T_IDENTCLASS Expression ')' | Instance | Instantiation| Expression T_COMP Expression | Expression T_ADD Expression | Expression T_SUB Expression | Expression T_DIV Expression | Expression T_MULT Expression | T_ADD Expression %prec UNARY | T_SUB Expression %prec UNARY;
+Expression : '(' T_IDENTCLASS Expression ')' | Instance | Instantiation| Expression T_COMP Expression | Expression T_ADD Expression | Expression T_SUB Expression | Expression T_DIV Expression | Expression T_MULT Expression | T_ADD Expression %prec UNARY | T_SUB Expression %prec UNARY | Expression T_CONCAT Expression;
 Selection : Instance'.'T_IDENT;
-Instance : T_IDENT | T_CONST | Selection | Message | T_STRING;
+Instance : '(' Expression ')' | T_IDENT | T_CONST | Selection | Message | T_STRING;
 Instantiation : T_NEW T_IDENTCLASS'('LParamOpt')';
 Message : Instance'.'T_IDENT'('LParamOpt')' | T_IDENTCLASS'.'T_IDENT'('LParamOpt')';
 ListInst : Instruction ListInst | Instruction;
