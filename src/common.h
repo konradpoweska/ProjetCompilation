@@ -33,7 +33,16 @@ typedef int bool;
 #define EVAL_ERROR	5
 #define UNEXPECTED	10
 
+/* Display colors */
+#define ERROR_COLOR "\x1B[91m"
+#define WARNING_COLOR "\x1B[93m"
+#define DEFAULT_COLOR "\x1B[0m"
+
 
 void yyerror(char *ignore);
+
+void printError(const char* format, ...);
+
+void printWarning(const char* format, ...);
 
 #endif /* end of include guard: COMMON_H */
