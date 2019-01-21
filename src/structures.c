@@ -23,11 +23,13 @@ extern ClassDeclP ClassList;
  * d'arbre pour 'nbChildren' fils et d'etiquette 'op' donnee. L'appelant
  * doit lui-même stocker ses fils dans la strucutre que MakeNode renvoie
  */
-/** A FINIR
+/**
+ *
+ *
  */
 TreeP makeNode(int nbChildren, Label label) {
 	TreeP tree = NEW(1, Tree);
-	tree->Oplabel = label; tree->nbChildren = nbChildren;
+	tree->opLabel = label; tree->nbChildren = nbChildren;
 	tree->u.children = nbChildren > 0 ? NEW(nbChildren, TreeP) : NIL(TreeP);
 	return(tree);
 }
@@ -59,7 +61,7 @@ TreeP makeTree(Label label, int nbChildren, ...) {
 /* Constructeur de feuille dont la valeur est un entier */
 TreeP makeLeafInt(Label label, int val) {
   TreeP tree = makeNode(0, label);
-  tree->u.val = val;
+  tree->u.valInt = val;
   return(tree);
 }
 
@@ -69,7 +71,7 @@ TreeP makeLeafInt(Label label, int val) {
  */
 TreeP makeLeafStr(Label label, char *str) {
   TreeP tree = makeNode(0, label);
-  tree->u.str = str;
+  tree->u.valStr = str;
   return(tree);
 }
 

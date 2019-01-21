@@ -44,10 +44,11 @@ typedef enum _Label{
 	L_ID = 17,			/* Label for a variable */
 
 	/* AST  Node */
-	L_BLOC = 18,		/* Label for a bloc */
+	L_BLOC = 18,		/* Label for a bloc : 2 children LisTDeclarations ListInstructions */
 	L_LISTINST = 19,	/* Label for a list of instruction */
 	L_SELECTION = 20,	/* Selection : ClassObjectName.attribute => 2 children*/
 	L_MESSAGE = 21,		/* Message : ClassObjectName.methodName(ListArg) => 3 children */
+	L_CAST = 22			/* Cast : (ClassName) Expression */
 
 
 
@@ -56,6 +57,7 @@ typedef enum _Label{
 
 /* Definition of the different possible types of Ident */
 typedef enum _IdentNature{
+	UNDEFINED,
 	GLOBALVAR,
 	LOCALVAR,
 	PARAMETER,
@@ -72,7 +74,7 @@ typedef enum _IdentNature{
   */
 typedef struct _Decl{
 	char *name;
-	_IdentNature nature;
+	IdentNature nature;
 	struct _Class* type;
 	struct _Decl *next;
 } VarDecl, *VarDeclP;
@@ -82,7 +84,7 @@ typedef struct _Decl{
  * struct that represents a Tree (node or leaf)
  */
 typedef struct _Tree {
-  Label Oplabel;         /* Label for the operator */
+  Label opLabel;         /* Label for the operator */
   short nbChildren; 	 /* number of children */
   union {
     char *valStr;      		 /* value of leaf if op = CSTSTR */
@@ -100,7 +102,7 @@ typedef struct _Class{
 
 	char* name;					/* Name of the class */
 	struct _Class* superClass;	/* Represents the super class */
-	struct _Method* constructor;/* Represents the class constructor */
+	struct _Meth* constructor;	/* Represents the class constructor */
 	VarDeclP header;			/* Header of the class */
 	VarDeclP attributes;		/* List of attributes for the class */
 
@@ -186,11 +188,16 @@ typedef union{
 /* Functions used for the construction of the AST */
 TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) */
 TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) */
-TreeP makeLeafIdent(Label label, VarDeclP ident):		/* leaf (variable) */
+TreeP makeLeafIdent(Label label, VarDeclP ident);		/* leaf (variable) */
 TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
 
 /* Printing the AST */
 void printAST(TreeP decls, TreeP main);
+
+
+
+/*****/
+VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param);
 
 
 /********************************* Functions relative to the class struct *********************************/
@@ -225,16 +232,8 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 /********************************* Functions relative to the list of method struct (MethDecl) *********************************/
 
 void addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
-void addMethodsToList(MethDeclP list, unsigned int count, ...);	/* function to add multiples methods to a list of method */
-MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method
- */
-
-/* Predef classes */
-extern Class Integer;
-extern Class String;
-
-/* A list that stores all the classes of the programm in order to use them for context verif */
-extern ClassDeclP ClassList;
+void addMethodsToList(MethDeclP list, int count, ...);	/* function to add multiples methods to a list of method */
+MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method */
 
 
 #endif /* end of include guard: STRUCTURES_H */
