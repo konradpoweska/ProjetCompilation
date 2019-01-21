@@ -58,8 +58,8 @@ typedef enum _Label{
 /* Definition of the different possible types of Ident */
 typedef enum _IdentNature{
 	UNDEFINED,
-	GLOBALVAR,
-	LOCALVAR,
+	GLOBALVAR,		/* Variable of the main programm bloc */
+	LOCALVAR,		/* Variable of a local bloc (ex : function call) */
 	PARAMETER,
 	ATTRIBUTE,
 	THIS,
@@ -196,7 +196,9 @@ void printAST(TreeP decls, TreeP main);
 
 
 
-/*****/
+/********************************* Functions relative to the Variables (VarDecl struct) *********************************/
+
+/* ""Constructor"" for an Ident (variable) */
 VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param);
 
 

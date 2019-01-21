@@ -91,6 +91,33 @@ void printAST(TreeP decls, TreeP main){
 
 }
 
+/********************************* Functions relative to the Variables (VarDecl struct) *********************************/
+
+/**
+ * ""Constructor"" for an Ident (variable)
+ * @param name_param, the name of the Variable
+ * @param nature_param, the nature of the variable
+ * @param type_param, the class type of the variable
+ * @return the variable pointer
+ */
+VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param){
+
+	if(name_param == NIL(char)){
+		fprintf(stderr, "ERROR : INVALID EMPTY VAR NAME !\n");
+		exit(EXIT_FAILURE);
+	}
+
+	VarDeclP var = NEW(1,VarDecl);
+
+	var->name = name_param;
+	var->nature = nature_param;
+	var->type = type_param;
+
+	return var;
+
+
+}
+
 /********************************* Functions relative to the class struct *********************************/
 
 /**
