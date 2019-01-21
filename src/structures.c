@@ -14,7 +14,7 @@ extern Class Integer;
 extern Class String;
 
 /* A list that stores all the classes of the programm in order to use them for context verif */
-extern ClassDeclP ClassList;
+extern ClassDeclP classList;
 
 
 /********************************* Functions relative to the AST (Tree struct) *********************************/
@@ -156,7 +156,7 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
 	class->isObject = isObject_param;
 
 	/* We add the newly constructed class to our list of available classes */
-	addClassToList(ClassList, class);
+	addClassToList(classList, class);
 
 	return class;
 }

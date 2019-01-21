@@ -52,8 +52,8 @@ Mkfile.old
 dkms.conf
 
 # Project specific rules
-obj/
 src/lex.c
 src/grammar.y.*
 src/compiler
 src/lex_test
+src/structuresTest

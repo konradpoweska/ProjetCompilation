@@ -10,7 +10,7 @@ Class Integer;
 Class String;
 
 /* A list that stores all the classes of the programm in order to use them for context verif */
-ClassDeclP ClassList;
+ClassDeclP classList;
 
 void _Init();
 
