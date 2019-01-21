@@ -56,6 +56,33 @@ TreeP makeTree(Label label, int nbChildren, ...) {
 }
 
 
+/* Constructeur de feuille dont la valeur est un entier */
+TreeP makeLeafInt(Label label, int val) {
+  TreeP tree = makeNode(0, label);
+  tree->u.val = val;
+  return(tree);
+}
+
+
+/* Constructeur de feuille dont la valeur est une chaine de caracteres.
+ * Construit un doublet pour la future variable et stocke son nom dedans.
+ */
+TreeP makeLeafStr(Label label, char *str) {
+  TreeP tree = makeNode(0, label);
+  tree->u.str = str;
+  return(tree);
+}
+
+/* Constructeur de feuille dont la valeur est une chaine de caracteres.
+ * Construit un doublet pour la future variable et stocke son nom dedans.
+ */
+TreeP makeLeafIdent(Label label, VarDeclP ident) {
+  TreeP tree = makeNode(0, label);
+  tree->u.ListDecl = ident;
+  return(tree);
+}
+
+
 void printAST(TreeP decls, TreeP main){
 
 	/* TODO */
@@ -294,7 +321,7 @@ void addMethodsToList(MethDeclP list, int count, ...){
 
 }
 
-/* Function to find a method in a list of method 
+/* Function to find a method in a list of method
  * @param list, the list we are searching in
  * @param methodName, the name of the method we are looking for
  * @return, the method pointer (if found), NIL(Method) otherwhise

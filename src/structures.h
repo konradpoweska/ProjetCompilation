@@ -186,6 +186,7 @@ typedef union{
 /* Functions used for the construction of the AST */
 TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) */
 TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) */
+TreeP makeLeafIdent(Label label, VarDeclP ident):		/* leaf (variable) */
 TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
 
 /* Printing the AST */
