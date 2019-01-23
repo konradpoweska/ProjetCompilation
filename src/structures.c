@@ -96,8 +96,8 @@ void printAST(TreeP decls, TreeP main){
 /**
  * ""Constructor"" for an Ident (variable)
  * @param name_param, the name of the Variable
- * @param nature_param, the nature of the variable
- * @param type_param, the class type of the variable
+ * @param nature_param, the nature of the variable => can be UNDEFINED if not known yet
+ * @param type_param, the class type of the variable => can be N
  * @return the variable pointer
  */
 VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param){
@@ -280,6 +280,10 @@ ClassP getClassInList(ClassDeclP list, char* className){
 /********************************* Functions relative to the method struct *********************************/
 
 
+/**
+ * Method """Constructor"""
+ * TODO JAVADOC
+ */
 MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, ClassP owner_param,
 						 ClassP returnType_param, TreeP body_param, bool redef_param){
 
@@ -289,8 +293,16 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO */
-	return NIL(Method);
+	MethodP m = NEW(Method);
+
+	m->parameters = parameters_param;
+	m->owner = owner_param;
+	m->returnType = returnType_param;
+	m->body = body_param;
+
+	m->redef = redef_param;
+
+	return m;
 }
 
 
