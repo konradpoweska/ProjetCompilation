@@ -293,7 +293,7 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 		exit(EXIT_FAILURE);
 	}
 
-	MethodP m = NEW(Method);
+	MethodP m = NEW(1,Method);
 
 	m->parameters = parameters_param;
 	m->owner = owner_param;
