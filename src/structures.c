@@ -85,6 +85,15 @@ TreeP makeLeafIdent(Label label, VarDeclP ident) {
 }
 
 
+TreeP makeLeafClass(Label label, ClassP class){
+
+	TreeP tree = makeNode(0, label);
+    tree->u.class = class;
+    return(tree);
+
+}
+
+
 void printAST(TreeP decls, TreeP main){
 
 	/* TODO */
@@ -117,6 +126,35 @@ VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_pa
 
 
 }
+
+/**
+ * Funcion to get a var into a list of var
+ * @param list, the list search in
+ * @param name, the name of the var o search
+ * @return the pointer to the var or NIL(VaDecl)
+ */
+VarDeclP getVarInList(VarDeclP list, char* name){
+
+	/* If no class defined yet */
+	if(list->name==NIL(char)){
+		return NIL(VarDecl);
+	}
+
+	/* We iterate to find the class into the chained list of class */
+	VarDeclP* p = &(list->next);
+	while((*p)->next!=NIL(VarDecl)){
+
+		/* if we find the class => return */
+		if(strcmp(name, (*p)->name)){
+			return (*p);
+		}
+		p=&((*p)->next);
+	}
+
+	return NIL(VarDecl);
+
+}
+
 
 /********************************* Functions relative to the class struct *********************************/
 

@@ -90,6 +90,7 @@ typedef struct _Tree {
     char *valStr;      		 /* value of leaf if op = CSTSTR */
     int valInt;			     /* value of leaf if op = CSTINT */
 	VarDeclP ListDecl;		 /* value of leaf if op = LISTVAR */
+	struct _Class* class;			 /* value of one leaf if op = L_NEW */
 
     struct _Tree **children; /* Tree of the children of the node */
   } u;
@@ -189,6 +190,7 @@ typedef union{
 TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) */
 TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) */
 TreeP makeLeafIdent(Label label, VarDeclP ident);		/* leaf (variable) */
+TreeP makeLeafClass(Label label, ClassP class);				/* leaf (class) */
 TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
 
 /* Printing the AST */
@@ -200,6 +202,9 @@ void printAST(TreeP decls, TreeP main);
 
 /* ""Constructor"" for an Ident (variable) */
 VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param);
+
+/* Method to get a var into a list of var */
+VarDeclP getVarInList(VarDeclP list, char* name);
 
 
 /********************************* Functions relative to the class struct *********************************/
