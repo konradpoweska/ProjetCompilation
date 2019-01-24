@@ -42,13 +42,14 @@ typedef enum _Label{
 	L_CONSTINT = 15,	/* Label for integer const */
 	L_CONSTSTR = 16,	/* Label for string const */
 	L_ID = 17,			/* Label for a variable */
+	L_CLASS = 18,		/* Label for a class leaf */
 
 	/* AST  Node */
-	L_BLOC = 18,		/* Label for a bloc : 2 children LisTDeclarations ListInstructions */
-	L_LISTINST = 19,	/* Label for a list of instruction */
-	L_SELECTION = 20,	/* Selection : ClassObjectName.attribute => 2 children*/
-	L_MESSAGE = 21,		/* Message : ClassObjectName.methodName(ListArg) => 3 children */
-	L_CAST = 22			/* Cast : (ClassName) Expression */
+	L_BLOC = 19,		/* Label for a bloc : 2 children LisTDeclarations ListInstructions */
+	L_LISTINST = 20,	/* Label for a list of instruction */
+	L_SELECTION = 21,	/* Selection : ClassObjectName.attribute => 2 children*/
+	L_MESSAGE = 22,		/* Message : ClassObjectName.methodName(ListArg) => 3 children */
+	L_CAST = 23			/* Cast : (ClassName) Expression */
 
 
 
