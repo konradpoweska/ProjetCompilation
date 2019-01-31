@@ -93,6 +93,13 @@ TreeP makeLeafClass(Label label, ClassP class){
 
 }
 
+TreeP makeLeafMethod(Label label, MethodP method){
+
+	TreeP tree = makeNode(0, label);
+    tree->u.method = method;
+    return(tree);
+
+}
 
 void printAST(TreeP decls, TreeP main){
 
@@ -121,6 +128,36 @@ VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_pa
 	var->name = name_param;
 	var->nature = nature_param;
 	var->type = type_param;
+
+	var->initialValue = NIL(Tree);
+
+	return var;
+
+
+}
+
+/**
+ * ""Constructor"" for an Ident (variable)
+ * @param name_param, the name of the Variable
+ * @param nature_param, the nature of the variable => can be UNDEFINED if not known yet
+ * @param type_param, the class type of the variable 
+ * @param initValu_param, the value to initialise the variable with
+ * @return the variable pointer
+ */
+VarDeclP ConstructInitialisedVar(char * name_param,IdentNature nature_param, ClassP type_param, TreeP initValue_param){
+
+	if(name_param == NIL(char)){
+		fprintf(stderr, "ERROR : INVALID EMPTY VAR NAME !\n");
+		exit(EXIT_FAILURE);
+	}
+
+	VarDeclP var = NEW(1,VarDecl);
+
+	var->name = name_param;
+	var->nature = nature_param;
+	var->type = type_param;
+
+	var->initialValue = initValue_param;
 
 	return var;
 
@@ -193,12 +230,48 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
  	class->predef = predef_param;
 	class->isObject = isObject_param;
 
+	class->tmp = FALSE; /* Object is complete ! */
+
 	/* We add the newly constructed class to our list of available classes */
 	addClassToList(classList, class);
 
 	return class;
 }
 
+/**
+ * Empty ""Constructor"" of a class structure
+  * NOTE : All pointers are NIL(...) because we don't have all the info at the construction here
+  * @param className_param, the name of the class (not NULL nor NIL(char) !!)
+  * @return the incomplete constructed class struct
+ */
+ClassP IncompleteClassConstruct(char* className_param){
+
+	if(className_param == NIL(char)){
+		fprintf(stderr, "ERROR : INVALID EMPTY CLASSNAME !\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* We construct the class */
+	ClassP class = NEW(1,Class);
+
+	class->name = className_param;
+	class->superClass = NIL(Class);
+	class->constructor = NIL(Method);
+	class->header = NIL(VarDecl);
+	class->attributes = NIL(VarDecl);
+
+	class->methods = NIL(MethDecl);
+
+ 	class->predef = FALSE;
+	class->isObject = FALSE;
+
+	class->tmp = TRUE; /* Object is incomplete ! */
+
+	/*Note : the class is not add to class list because not yet defined*/
+
+	return class;
+
+}
 
 /**
  * Function to add a method to a class struct (to it's chained list of methods)
@@ -299,6 +372,11 @@ ClassP getClassInList(ClassDeclP list, char* className){
 		return NIL(Class);
 	}
 
+	/* If no className => not in list */
+	if(className == NIL(char)){
+		return NIL(Class);
+	}
+
 	/* We iterate to find the class into the chained list of class */
 	ClassDeclP* p = &(list->next);
 	while((*p)->next!=NIL(ClassDecl)){
@@ -333,6 +411,7 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 
 	MethodP m = NEW(1,Method);
 
+	m->name = methodName_param;
 	m->parameters = parameters_param;
 	m->owner = owner_param;
 	m->returnType = returnType_param;
@@ -340,9 +419,38 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 
 	m->redef = redef_param;
 
+	m->tmp = FALSE;
+
 	return m;
 }
 
+/**
+ * Method incomplete constructor => create incomplete methods (to be checked later on)
+ * TODO JAVADOC
+ */
+MethodP IncompleteMethodConstruct(char* methodName_param){
+
+
+	if(methodName_param == NIL(char)){
+		fprintf(stderr, "ERROR : INVALID EMPTY METHOD NAME !\n");
+		exit(EXIT_FAILURE);
+	}
+
+	MethodP m = NEW(1,Method);
+
+	m->name = methodName_param;
+
+	m->parameters = NIL(VarDecl);
+	m->owner = NIL(Class);
+	m->returnType = NIL(Class);
+	m->body = NIL(Tree);
+
+	m->redef = FALSE;
+
+	m->tmp=TRUE;
+
+	return m;
+}
 
 
 /********************************* Functions relative to the list of method struct (MethDecl) *********************************/
@@ -382,21 +490,35 @@ void addMethodToList(MethDeclP list, MethodP method){
 /**
  * Function to add multiples methods to a list of method
  * @param list, the list of Methods to modify
- * @param count, the number of methods to add
- * @param ...,the multiples MethodP to add
+ * @param list2, the list of methods to add
  * @return nothing...
  */
-void addMethodsToList(MethDeclP list, int count, ...){
+void addMethodsToList(MethDeclP list, MethDeclP list2){
 
-	va_list methods;
+	/* Empty list cases */
+	if(list2 == NIL(MethDecl)){
+		return;	/* List to add is empty => nothing to do */
+	}
+	if(list == NIL(MethDecl)){
+		list->method = list2->method;
+		list->next = list2->next;
+		return;	
+	}
+	
+	/* We iterate to go to the end of the chained list of methods */
+	MethDeclP* p = &(list);
 
-    va_start(methods, count); 				/* Requires the last fixed parameter (to get the address) */
+	while((*p)->next!=NIL(MethDecl)){
+		p=&((*p)->next);
+	}
 
-	/* Iterates trough the methods in order to add them */
-    for (int j = 0; j < count; j++) {
-        addMethodToList(list,va_arg(methods, MethodP));
-    }
-    va_end(methods);
+	MethDeclP node = NEW(1,MethDecl);
+	node->method = list2->method;
+	node->next = list2->next;
+
+	/* we add our method to the list of methods */
+	(*p)->next=node;
+
 
 }
 

@@ -15,41 +15,59 @@
  */
 typedef enum _Label{
 	/* Arithmetic Operators (binary Operators) */
-	L_CONCAT =0,
-	L_ADD=1,
-	L_SUB=2,
-	L_MULT=3,
-	L_DIV=4,
+	L_CONCAT,
+	L_ADD,
+	L_SUB,
+	L_MULT,
+	L_DIV,
 
 	/* Affectation Operator (binary Operator) */
-	L_AFFECT=5,
+	L_AFFECT,		/* Affectation, 1 or 2 children : 1 = TreeP (Instance), 2= TreeP (Expression)
+													  1 = TreeP (AffectOpt) */
 
 	/* Comparison Operators (binary Operators) */
-	L_NOTEQ=6,
-	L_EQ=7,
-	L_INF=8,
-	L_INFEQ=9,
-	L_SUP=10,
-	L_SUPEQ=11,
+	L_NOTEQ,
+	L_EQ,
+	L_INF,
+	L_INFEQ,
+	L_SUP,
+	L_SUPEQ,
+
+	/* Unary Operator */
+	L_UNARYPLUS,
+	L_UNARYMINUS,
 
 	/* KeyWord */
-	L_IFTHENELSE=12,	/* (ternary Operator (3child)) */
-	L_NEW = 13,			/* Creation of a new instance of a class (2 children : 0=ClassName, 1=ListParam) */
+	L_IFTHENELSE,	/* If then else,  3 children : 1 = TreeP, 2 = TreeP, 3 = TreeP */
+	L_NEW,			/* Creation of a NEW INSTANCE of a class, 2 children : 1=TreeP (leaf(Class)), 2=TreeP (ListParam) */
 
 
-	/* AST Leaf */
-	L_LISTVAR = 14,		/* Label for a List of declaration of variables into our AST (list of decl is a leaf) */
-	L_CONSTINT = 15,	/* Label for integer const */
-	L_CONSTSTR = 16,	/* Label for string const */
-	L_ID = 17,			/* Label for a variable */
-	L_CLASS = 18,		/* Label for a class leaf */
+	L_PARAMLIST,	/* list of parameters of a function call (1 or 2 children : 1=Param(TreeP), (2=ListParam(TreeP)) ) */
+
+	/* AST Leaf (TreeP) */
+	L_LISTVAR,		/* Label for a List of declaration of variables into our AST (list of decl is a leaf) */
+	L_CONSTINT,		/* Label for an integer const 	*/
+	L_CONSTSTR,		/* Label for a string const 	*/
+	L_ID,			/* Label for a variable 		*/
+	L_CLASS,		/* Label for a class leaf 		*/
+	L_METHOD,		/* Label for a method leaf 		*/
 
 	/* AST  Node */
-	L_BLOC = 19,		/* Label for a bloc : 2 children LisTDeclarations ListInstructions */
-	L_LISTINST = 20,	/* Label for a list of instruction */
-	L_SELECTION = 21,	/* Selection : ClassObjectName.attribute => 2 children*/
-	L_MESSAGE = 22,		/* Message : ClassObjectName.methodName(ListArg) => 3 children */
-	L_CAST = 23			/* Cast : (ClassName) Expression */
+
+	L_BLOC,			/* Label for a bloc : 1 or 2 children 1 = TreeP, (2 = TreeP)
+													either 1 = TreeP (leaf(VarDeclP) = ListDeclarations) and 2 = TreeP (ListInstructions)
+													either 1 = TreeP (ListInstructions) */
+
+	L_LISTINST,		/* Label for a list of instruction, 1 or 2 Children : 1 = TreeP (Instruction), (2 = TreeP (ListInst)) */
+
+	L_SELECTION,	/* Selection : 2 children : 1=TreeP (Instance rule), 2=TreeP (leaf(VarDeclP))*/
+	L_MESSAGE,		/* Message : => 3 children :  1 = TreeP, 2 = TreeP, 3 = TreeP but different meanings :
+													either : 1 = TreeP (Instance), 2 = TreeP (leaf(Method)), 3 = TreeP (ListParam)
+													either : 1 = TreeP (leaf(Class)), 2 = TreeP (leaf(Method)), 3 = TreeP (ListParam) */
+
+	L_CAST,			/* Cast : (ClassName Expression) => AST with 2 children : 1=TreeP (is a leaf(Class)), 2=TreeP */
+
+	
 
 
 
@@ -77,7 +95,11 @@ typedef struct _Decl{
 	char *name;
 	IdentNature nature;
 	struct _Class* type;
+
+	struct _Tree* initialValue;
+
 	struct _Decl *next;
+
 } VarDecl, *VarDeclP;
 
 
@@ -91,7 +113,8 @@ typedef struct _Tree {
     char *valStr;      		 /* value of leaf if op = CSTSTR */
     int valInt;			     /* value of leaf if op = CSTINT */
 	VarDeclP ListDecl;		 /* value of leaf if op = LISTVAR */
-	struct _Class* class;			 /* value of one leaf if op = L_NEW */
+	struct _Class* class;	 /* value of one leaf if op = L_NEW */
+	struct _Meth* method;	 /* value of one leaf if op = L_MESSAGE */
 
     struct _Tree **children; /* Tree of the children of the node */
   } u;
@@ -112,6 +135,8 @@ typedef struct _Class{
 
 	bool predef;				/* Is the class a predefined class ? (if yes => no subClass)*/
 	bool isObject;				/* Is the class an Object (static class) ?  (object cannot be derived (no SubClass)) */
+
+	bool tmp;			/*Is the class a temporary found name ? (before the declaration) */
 
 } Class, *ClassP;
 
@@ -139,7 +164,7 @@ typedef struct _Meth{
 	TreeP body;			 /* Body of the method */
 	bool redef;			 /* Is the method a redefinition ? */
 
-	/*TO be continued.....*/
+	bool tmp;
 
 }Method, *MethodP;
 
@@ -164,11 +189,17 @@ typedef struct _MethDecl{
  * etc.
  */
 typedef union{
-	char C;			/* alone char */
-	char *S;		/* string */
-  	int I;			/* int value */
-  	VarDeclP D;		/* pairs of (variable, type) */
-  	TreeP T;		/* AST */
+	char C;				/* alone char */
+	char *S;			/* string */
+  	int I;				/* int value */
+
+	bool B;
+
+  	VarDeclP D;			/* pairs of (variable, type) */
+  	ClassP Class;		/* class pointer */
+  	MethodP M;			/* method */
+  	MethDeclP MList;	/* List of method */
+  	TreeP T;			/* AST */
 
 	/*To be continued */
 
@@ -188,11 +219,12 @@ typedef union{
 /********************************* Functions relative to the AST (Tree struct) *********************************/
 
 /* Functions used for the construction of the AST */
-TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) */
-TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) */
-TreeP makeLeafIdent(Label label, VarDeclP ident);		/* leaf (variable) */
-TreeP makeLeafClass(Label label, ClassP class);				/* leaf (class) */
-TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree */
+TreeP makeLeafStr(Label label, char *str); 	    		/* leaf (string value) 	*/
+TreeP makeLeafInt(Label label, int val);	            /* leaf (int value) 	*/
+TreeP makeLeafIdent(Label label, VarDeclP ident);		/* leaf (variable) 		*/
+TreeP makeLeafClass(Label label, ClassP class);			/* leaf (class) 		*/
+TreeP makeLeafMethod(Label label, MethodP method);		/* leaf (method) 		*/
+TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree 	*/
 
 /* Printing the AST */
 void printAST(TreeP decls, TreeP main);
@@ -203,6 +235,7 @@ void printAST(TreeP decls, TreeP main);
 
 /* ""Constructor"" for an Ident (variable) */
 VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param);
+VarDeclP ConstructInitialisedVar(char * name_param,IdentNature nature_param, ClassP type_param, TreeP initValue_param);
 
 /* Method to get a var into a list of var */
 VarDeclP getVarInList(VarDeclP list, char* name);
@@ -216,6 +249,8 @@ VarDeclP getVarInList(VarDeclP list, char* name);
  */
 ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP constructor_param, VarDeclP header_param,
 						VarDeclP attributes_param, MethDeclP methods_param, bool predef_param, bool isObject_param);
+
+ClassP IncompleteClassConstruct(char* className_param);		/* Construct an temporary class (use to check if the class is defined) */
 
 void addMethodToClass(ClassP class, MethodP method);		/* function to add a method to a class */
 void addMethodsToClass(ClassP class, MethDeclP methods);	/* function to add a list of method to a class */
@@ -236,11 +271,12 @@ ClassP getClassInList(ClassDeclP list, char* className); /* function to find a c
 MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, ClassP owner_param,
 						 ClassP returnType_param, TreeP body_param, bool redef_param);
 
+MethodP IncompleteMethodConstruct(char* methodName_param); /* Construct an temporary method (use to check if the method is defined) */
 
 /********************************* Functions relative to the list of method struct (MethDecl) *********************************/
 
 void addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
-void addMethodsToList(MethDeclP list, int count, ...);	/* function to add multiples methods to a list of method */
+void addMethodsToList(MethDeclP list, MethDeclP list2);	/* function to add multiples methods to a list of method */
 MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method */
 
 
