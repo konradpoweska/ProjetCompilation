@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=gnu11 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -g
+CFLAGS = -std=gnu11 -Wall -Wextra -Wno-unused-parameter -g
 LDFLAGS = -lfl
 
 
@@ -20,6 +20,9 @@ all: $(EXEC)
 # specific
 lex.c: lex.l
 	flex --yylineno -o $@ $<
+
+lex.o: lex.c $(HDRS)
+	$(CC) $(CFLAGS) -Wno-unused-function -Wno-sign-compare -o $@ -c $<
 
 grammar.y.c grammar.y.h : grammar.y structures.h
 	bison -v -d -o grammar.y.c $<

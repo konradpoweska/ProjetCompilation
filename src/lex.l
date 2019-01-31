@@ -1,5 +1,6 @@
 %x IN_COMMENT
 %{
+#include "common.h"
 #include "structures.h"
 #include "grammar.y.h"
 extern YYSTYPE yylval;
@@ -28,7 +29,7 @@ char* parseString(char* s) {
         case '\\': *(r++) = '\\'; break;
         case '\'': *(r++) = '\''; break;
         case '"': *(r++) = '"'; break;
-        default: fprintf(stderr, "Warning: Unknown escaped character \"\\%c\" ignored\n", *s);
+        default: printWarning("Unknown escaped character \"\\%c\" ignored\n", *s);
       }
       s++;
       continue;
@@ -92,5 +93,5 @@ Symbol [;,.:(){}]
 {Letter}{LtrInt}* {yylval.S = strdup(yytext); return T_IDENT;}
 {Integer} {yylval.I = atoi(yytext); return T_CONST;}
 {Symbol} {return yytext[0];}
-. { fprintf(stderr, "Unrecognized symbol: %s\n", yytext); exit(1); }
+. { printError("Unrecognized symbol: %s\n", yytext); exit(LEXICAL_ERROR); }
 %%
