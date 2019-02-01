@@ -8,6 +8,10 @@
 
 void appendEnv(VarDeclP thisEnv, VarDeclP superEnv) {
   // append superEnv to the end of thisEnv
+  while(thisEnv->next != NIL(VarDecl)){
+      thisEnv = thisEnv->next;
+  }
+  thisEnv->next = superEnv;
 }
 
 
