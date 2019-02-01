@@ -58,12 +58,21 @@ MethodP getMethod(MethodP* method, ClassP class) {
 
 ////// CHECKERS //////
 
-bool checkVarDecl(VarDeclP* var, VarDeclP env) {
-  /* TODO
-   * - check type
-   * - if initialised : check if affected expression is valid (type, scope)
-   */
-  return FALSE;
+bool checkVarDecl(VarDeclP var, VarDeclP env) {
+  //assuming var is not temp
+
+  getClass(&(var->type));//Checks if the type exists, and link it in the VarDecl if it does
+
+  if(var->initialValue != NIL(Tree)){
+    checkBlock(var->initialValue, env);//Checks if affected expression is valid
+    ClassP initialValType = getType(var->initialValue);
+    if(!derivesType(initialValType, var->type)){
+      printError("Expected %s, got %s\n", var->type->name, initialValType->name);
+      exit(CONTEXT_ERROR);
+    }
+  }
+
+  return TRUE;
 }
 
 

@@ -16,7 +16,7 @@ MethodP getMethod(MethodP* method, ClassP class);
 
 
 // CHECKERS
-bool checkVarDecl(VarDeclP* var, VarDeclP env);
+bool checkVarDecl(VarDeclP var, VarDeclP env);
 
 bool checkBlock(TreeP block, VarDeclP env);
 
