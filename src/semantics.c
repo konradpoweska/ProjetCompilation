@@ -4,6 +4,72 @@
 #include "init.h" // access to globals
 
 
+////// UTILITIES //////
+
+void appendEnv(VarDeclP thisEnv, VarDeclP superEnv) {
+  // append superEnv to the end of thisEnv
+}
+
+
+
+////// LINKERS //////
+
+ClassP getClass(ClassP* class) {
+  // TODO
+  return NIL(Class);
+}
+
+
+VarDeclP getVarDecl(VarDeclP* var, VarDeclP env) {
+  // TODO
+  return NIL(VarDecl);
+}
+
+
+MethodP getMethod(MethodP* method, ClassP class) {
+  // TODO
+  return NIL(Method);
+}
+
+
+////// CHECKERS //////
+
+bool checkVarDecl(VarDeclP* var, VarDeclP env) {
+  /* TODO
+   * - check type
+   * - if initialised : check if affected expression is valid (type, scope)
+   */
+  return FALSE;
+}
+
+
+bool checkBlock(TreeP block, VarDeclP env) {
+  /* TODO
+   * - check each instruction...
+   */
+  return FALSE;
+}
+
+
+bool checkClassConstructorHeader(ClassP class) {
+  return TRUE;
+}
+
+
+
+bool checkClass(ClassP* class) {
+  /* - check header & constructor
+   * - check type of every attribute
+   * - check each method body
+   * - forbid method overloading
+   * - set each method owner
+   */
+  return FALSE;
+}
+
+
+////// TYPE CHECKING //////
+
 ClassP getTypeITE(TreeP expr) {
   if(expr->opLabel != L_IFTHENELSE) exit(UNEXPECTED);
 
@@ -52,7 +118,11 @@ ClassP getType(TreeP expr) {
     case L_SELECTION: return getTypeSELEC(expr);
     case L_MESSAGE: return getTypeMSG(expr);
     case L_CAST: return getTypeCAST(expr);
-    default: return NIL(Class);
+    default: {
+      printError("In %s, unrecognised type of expression (label=%d)",
+        __func__, expr->opLabel);
+      exit(UNEXPECTED);
+    }
   }
 }
 
