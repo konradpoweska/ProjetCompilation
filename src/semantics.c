@@ -2,6 +2,7 @@
 #include "semantics.h"
 #include "common.h"
 #include "init.h" // access to globals
+#include <string.h>
 
 
 ////// UTILITIES //////
@@ -89,6 +90,45 @@ bool checkBlock(TreeP block, VarDeclP env) {
 
 
 bool checkClassConstructorHeader(ClassP class) {
+  // assuming class & its contructor are not temp
+  MethodP constr;
+
+  if(class == NIL(Class) || (constr = class->constructor) == NIL(Method)) {
+    printError("null pointer in %d", __func__);
+    exit(UNEXPECTED);
+  }
+
+  if(strcmp(constr->name, class->name) != 0) {
+    printError(
+      "in %d, constructor has different name than its class: %s != %s\n",
+      __func__, constr->name, class->name);
+    exit(UNEXPECTED);
+  }
+
+  // check arguments
+  VarDeclP classArgs  = class->header;
+  VarDeclP constrArgs = constr->parameters;
+
+  while(classArgs != constrArgs) {
+
+    if(classArgs != NULL || constrArgs != NULL)
+      return FALSE;
+      // they are different because only one of them is NULL (see while condition)
+
+    if(
+      getClass(&classArgs->type) != getClass(&constrArgs->type) ||
+      strcmp(classArgs->name, constrArgs->name) != 0
+    ) {
+      printError("%s constructor header is different from class header\n",
+        class->name);
+      exit(CONTEXT_ERROR);
+      return FALSE;
+    }
+
+    classArgs = classArgs->next;
+    constrArgs = constrArgs->next;
+  }
+
   return TRUE;
 }
 
