@@ -15,20 +15,44 @@ void appendEnv(VarDeclP thisEnv, VarDeclP superEnv) {
 ////// LINKERS //////
 
 ClassP getClass(ClassP* class) {
-  // TODO
-  return NIL(Class);
+  if(!(*class)->tmp){
+    return *class;
+  }
+  ClassP realClass = getClassInList(classList, (*class)->name);
+  if(realClass == NIL(Class)){
+    printError("Class %s has not been declared\n", (*class)->name);
+    exit(CONTEXT_ERROR);
+  }
+  *class = realClass;
+  return realClass;
 }
 
 
 VarDeclP getVarDecl(VarDeclP* var, VarDeclP env) {
-  // TODO
-  return NIL(VarDecl);
+  /*if(!(*var)->tmp){
+    return *var;
+  }*/
+  VarDeclP realVar = getVarInList(env, (*var)->name);
+  if(realVar == NIL(VarDecl)){
+    printError("Var %s has not been declared\n", (*var)->name);
+    exit(CONTEXT_ERROR);
+  }
+  *var = realVar;
+  return realVar;
 }
 
 
 MethodP getMethod(MethodP* method, ClassP class) {
-  // TODO
-  return NIL(Method);
+  if(!(*method)->tmp){
+    return *method;
+  }
+  MethodP realMethod = getMethodInList(class->methods, (*method)->name);
+  if(realMethod == NIL(Method)){
+    printError("Method %s does not exist in class %s\n", (*method)->name, (class)->name);
+    exit(CONTEXT_ERROR);
+  }
+  *method = realMethod;
+  return realMethod;
 }
 
 
