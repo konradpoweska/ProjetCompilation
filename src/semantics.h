@@ -20,6 +20,8 @@ bool checkVarDecl(VarDeclP var, VarDeclP env);
 
 bool checkBlock(TreeP block, VarDeclP env);
 
+bool sameArgList(VarDeclP l1, VarDeclP l2);
+
 bool checkClassConstructorHeader(ClassP class);
 
 bool checkClass(ClassP* class);

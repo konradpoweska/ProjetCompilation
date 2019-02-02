@@ -89,12 +89,32 @@ bool checkBlock(TreeP block, VarDeclP env) {
 }
 
 
+bool sameArgList(VarDeclP l1, VarDeclP l2) {
+  while(l1 != l2) { // if pointers are equal, lists are equal
+
+    if(l1 == NIL(VarDecl) || l2 == NIL(VarDecl))
+      return FALSE;
+      // they are different because only one of them is NULL (see while condition)
+
+    if(
+      getClass(&l1->type) != getClass(&l2->type) ||
+      strcmp(l1->name, l2->name) != 0
+    )
+      return FALSE;
+
+    l1 = l1->next;
+    l2 = l2->next;
+  }
+
+  return TRUE;
+}
+
 bool checkClassConstructorHeader(ClassP class) {
   // assuming class & its contructor are not temp
   MethodP constr;
 
   if(class == NIL(Class) || (constr = class->constructor) == NIL(Method)) {
-    printError("null pointer in %d", __func__);
+    printError("null argument in %d\n", __func__);
     exit(UNEXPECTED);
   }
 
@@ -109,24 +129,10 @@ bool checkClassConstructorHeader(ClassP class) {
   VarDeclP classArgs  = class->header;
   VarDeclP constrArgs = constr->parameters;
 
-  while(classArgs != constrArgs) {
-
-    if(classArgs != NULL || constrArgs != NULL)
-      return FALSE;
-      // they are different because only one of them is NULL (see while condition)
-
-    if(
-      getClass(&classArgs->type) != getClass(&constrArgs->type) ||
-      strcmp(classArgs->name, constrArgs->name) != 0
-    ) {
-      printError("%s constructor header is different from class header\n",
-        class->name);
-      exit(CONTEXT_ERROR);
-      return FALSE;
-    }
-
-    classArgs = classArgs->next;
-    constrArgs = constrArgs->next;
+  if(!sameArgList(constrArgs, classArgs)) {
+    printError("%s constructor header is different from class header\n",
+      class->name);
+    exit(CONTEXT_ERROR);
   }
 
   return TRUE;
