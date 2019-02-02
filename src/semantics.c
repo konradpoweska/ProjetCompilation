@@ -109,6 +109,41 @@ bool sameArgList(VarDeclP l1, VarDeclP l2) {
   return TRUE;
 }
 
+bool hasCopyInList(MethDeclP list, MethodP method, MethodP *copy){
+  while(list != NIL(MethDecl)){
+
+    if(strcmp(list->method->name, method->name) == 0){//same name
+
+      if(list->method != method){//different address
+        *copy = list->method;
+        return TRUE;
+      }
+    }
+    list = list->next;
+  }
+  return FALSE;
+}
+
+bool isSurcharge(ClassP class, MethodP method){
+  if(hasCopyInList(class->methods, method, NIL(Method))){//another method exists in the class with the same name
+    printError("Redefinition of method %s in class %s", method->name, class->name);
+    exit(CONTEXT_ERROR);
+  }
+
+  while(class->superClass != NIL(Class)){
+    class = class->superClass;
+    MethodP eventualCopy = NIL(Method);
+
+    if(hasCopyInList(class->methods, method, &eventualCopy)){//same name in super class
+      if(!sameArgList(eventualCopy->parameters, method->parameters)){//different parameters means its a surcharge
+        printError("Surcharge of method %s from class %s", eventualCopy->name, class->name);
+        exit(CONTEXT_ERROR);
+      }
+    }
+  }
+  return FALSE;
+}
+
 bool checkClassConstructorHeader(ClassP class) {
   // assuming class & its contructor are not temp
   MethodP constr;
