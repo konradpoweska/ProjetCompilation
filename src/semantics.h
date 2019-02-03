@@ -4,8 +4,9 @@
 #include "structures.h"
 
 // UTILITIES
-void appendEnv(VarDeclP thisEnv, VarDeclP superEnv);
+void appendEnv(VarDeclP thisEnv, const VarDeclP superEnv, VarDeclP* const undoBuff);
 
+void undoAppendEnv(VarDeclP* const undoBuff);
 
 // LINKERS
 ClassP getClass(ClassP* class);
@@ -24,12 +25,12 @@ bool sameArgList(VarDeclP l1, VarDeclP l2);
 
 bool checkClassConstructorHeader(ClassP class);
 
-bool checkClass(ClassP* class);
+bool checkClass(ClassP class);
 
 
 // TYPE CHECKERS
-ClassP getType(TreeP expr);
+ClassP getType(TreeP expr, VarDeclP env);
 
-bool derivesType(ClassP thisType, ClassP targetType);
+bool derivesType(ClassP type, ClassP superType);
 
 #endif
