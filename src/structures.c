@@ -101,9 +101,244 @@ TreeP makeLeafMethod(Label label, MethodP method){
 
 }
 
-void printAST(TreeP decls, TreeP main){
+/* return child N°i (i goes from 0 to N-1) */
+TreeP getChild(TreeP tree, int i) {
+  return tree->u.children[i];
+}
+
+/* Printing the AST and lists */
+void printAST(TreeP main){
 
 	/* TODO */
+
+}
+
+void printExpr (TreeP expr, int depth){
+
+	if(expr==NIL(Tree)){
+		return;
+	}
+
+	/*printf("\nDepth %d:\n",depth);*/
+
+	switch (expr->opLabel){
+	case L_CONCAT :
+	case L_ADD :
+	case L_SUB :
+	case L_MULT :
+	case L_DIV :
+	case L_AFFECT :
+	case L_NOTEQ :
+	case L_EQ :
+	case L_INF :
+	case L_INFEQ :
+	case L_SUP :
+	case L_SUPEQ :     	printExpr(getChild(expr, 0),depth+1);
+   						printOpBinaire(expr->opLabel);
+    					printExpr(getChild(expr, 1),depth+1);
+    					break;
+
+	case L_UNARYPLUS :	printf("\n+");
+   						printExpr(getChild(expr, 0),depth+1);
+    					break;
+
+	case L_UNARYMINUS :	printf("\n-");
+   						printExpr(getChild(expr, 0),depth+1);
+    					break;
+
+	case L_IFTHENELSE : printf("\nIF("); printExpr(getChild(expr, 0),depth+1); 		/* condition */
+    					printf(")\nTHEN{\n"); printExpr(getChild(expr, 1),depth+1); /* 'then' part */
+   						printf("}\nELSE{\n"); printExpr(getChild(expr, 2),depth+1); /* 'else' part */
+   						printf("}\n");
+    					break;
+
+	case L_NEW : printf("NEW "); printClass(getChild(expr,0)->u.class); printExpr(getChild(expr,1),depth+1); break;
+	case L_PARAMLIST : 	printExpr(getChild(expr,0),depth+1); if(expr->nbChildren>1) { printExpr(getChild(expr,1),depth+1); } break;
+	
+	/* --- AST LEAF --- */
+
+	case L_LISTVAR : 	printf("Var Declarations : ");printVarList(expr->u.ListDecl); printf("\n"); break;
+	case L_CONSTINT : 	printf("%d", expr->u.valInt); break;
+	case L_CONSTSTR : 	printf("\"%s\"", expr->u.valStr); break;
+	case L_ID :			printVarList(expr->u.ListDecl); break;
+	case L_CLASS :		printClass(expr->u.class); break;
+	case L_METHOD :		printMethod(expr->u.method); break;
+
+	/* ---------------- */
+	case L_BLOC :		printExpr(getChild(expr,0),depth+1); if(expr->nbChildren>1) { printExpr(getChild(expr,1),depth+1); } break;
+	case L_LISTINST : 	printExpr(getChild(expr,0),depth+1); if(expr->nbChildren>1) { printExpr(getChild(expr,1),depth+1); } break;
+
+	case L_SELECTION : printExpr(getChild(expr,0),depth+1); printf("."); printExpr(getChild(expr,1),depth+1); break;
+	case L_MESSAGE : 	printExpr(getChild(expr,0),depth+1);
+						printf(".");
+						printExpr(getChild(expr,1),depth+1);
+						printf("(");
+						printExpr(getChild(expr,2),depth+1);
+						printf(")");
+						break;
+
+	case L_CAST : printf("CAST : ");printExpr(getChild(expr,0),depth+1); printExpr(getChild(expr,1),depth+1); break;
+	}
+}
+
+void printOpBinaire(char op) {
+	switch(op) {
+	case L_CONCAT : printf("&"); 	break;
+	case L_EQ:    	printf("="); 	break;
+	case L_NOTEQ:   printf("<>"); 	break;
+	case L_SUP:    	printf(">"); 	break;
+	case L_SUPEQ:   printf(">="); 	break;
+	case L_INF:   	printf("<"); 	break;
+	case L_INFEQ: 	printf("<="); 	break;
+	case L_ADD:  	printf("+"); 	break;
+	case L_SUB:		printf("-"); 	break;
+	case L_MULT:	printf("*"); 	break;
+	case L_DIV:  	printf("/"); 	break;
+	case L_AFFECT: 	printf(":="); 	break;
+	default:
+		fprintf(stderr, "\nUnexpected binary operator of code: %d\n", op);
+		exit(UNEXPECTED);
+	}
+}
+
+void printClass(ClassP c){
+
+	if(c == NIL(Class)){
+		return;
+	}
+
+	if(c->isObject){
+		printf("Object : %s",c->name);
+	}
+	else{
+		printf("Class : %s",c->name);
+	}
+
+
+	ClassP superC = c->superClass;
+
+	if(superC!=NIL(Class)){
+		printf(" extends %s", superC->name);
+	}
+
+}
+
+void printMethod(MethodP m){
+
+	if(m == NIL(Method)){
+		return;
+	}
+
+	if(m->redef){
+		printf("[Override] ");
+	}
+
+	if(m->returnType==NIL(Class)){
+		printf("void %s(",m->name);
+	}
+	else{
+		printf("%s %s(",m->returnType->name,m->name);
+	}
+
+	printVarList(m->parameters);
+
+	printf(")\n");
+
+}
+
+/**
+ * Function that prints a class list (full)
+ * TODO
+ */
+void printFullClassList(ClassDeclP list){
+
+	/* Empty list */
+	if(list == NIL(ClassDecl) || list->class == NIL(Class)){
+		fprintf(stdout, "\n\nEnd of class list\n");
+		return;
+	}
+	
+
+	if(list->class->isObject){
+		printf("\nObject : %s",list->class->name);
+	}
+	else{
+		printf("\nClass : %s",list->class->name);
+	}
+
+
+	ClassP superC = list->class->superClass;
+
+	if(superC!=NIL(Class)){
+		printf(" extends %s", superC->name);
+	}
+	
+
+
+	fprintf(stdout, "\nAttributes : ");
+	printVarList(list->class->attributes);
+	fprintf(stdout, "\nMethods :\n" );
+	printMethodList(list->class->methods);
+
+
+	printFullClassList(list->next);
+
+}
+
+void printClassList(ClassDeclP list){
+
+	/* Empty list */
+	if(list == NIL(ClassDecl) || list->class == NIL(Class)){
+		fprintf(stdout, "End of class list\n");
+		return;
+	}
+	
+	printClass(list->class);
+	printf("\n");
+	printClassList(list->next);
+
+}
+
+void printMethodList(MethDeclP list){
+
+	if(list==NIL(MethDecl)){
+		printf("\n");
+		return;
+	}
+
+	printf("\t");
+	printMethod(list->method);
+
+	printMethodList(list->next);
+
+}
+
+void printVarList(VarDeclP list){
+
+	if(list==NIL(VarDecl)){
+		/*printf("End of var list\n");*/
+		return;
+	}
+	if(list->type == NIL(Class)){
+		if(list->next!=NIL(VarDecl)){
+			printf("UnknownType %s,",list->name);
+		}
+		else{
+			printf("UnknownType %s",list->name);
+		}
+	}
+	else{
+		if(list->next!=NIL(VarDecl)){
+			printf("%s %s,",list->type->name,list->name);
+		}
+		else{
+			printf("%s %s",list->type->name,list->name);
+		}
+		
+	}
+	
+
+	printVarList(list->next);
 
 }
 
@@ -116,7 +351,7 @@ void printAST(TreeP decls, TreeP main){
  * @param type_param, the class type of the variable => can be N
  * @return the variable pointer
  */
-VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param){
+VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param, bool var_param){
 
 	if(name_param == NIL(char)){
 		fprintf(stderr, "ERROR : INVALID EMPTY VAR NAME !\n");
@@ -131,6 +366,10 @@ VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_pa
 
 	var->initialValue = NIL(Tree);
 
+	var->isVar = var_param;
+
+	var->next = NIL(VarDecl);
+
 	return var;
 
 
@@ -140,7 +379,7 @@ VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_pa
  * ""Constructor"" for an Ident (variable)
  * @param name_param, the name of the Variable
  * @param nature_param, the nature of the variable => can be UNDEFINED if not known yet
- * @param type_param, the class type of the variable 
+ * @param type_param, the class type of the variable
  * @param initValu_param, the value to initialise the variable with
  * @return the variable pointer
  */
@@ -172,23 +411,27 @@ VarDeclP ConstructInitialisedVar(char * name_param,IdentNature nature_param, Cla
  */
 VarDeclP getVarInList(VarDeclP list, char* name){
 
-	/* If no class defined yet */
-	if(list->name==NIL(char)){
-		return NIL(VarDecl);
-	}
+	if(list == NIL(VarDecl)){
+         return NIL(VarDecl);
+    }
 
-	/* We iterate to find the class into the chained list of class */
-	VarDeclP* p = &(list->next);
-	while((*p)->next!=NIL(VarDecl)){
 
-		/* if we find the class => return */
-		if(strcmp(name, (*p)->name)){
-			return (*p);
+    /* We iterate to find the class into the chained list of class */
+    VarDeclP p =list;
+    while(p !=NIL(VarDecl)){
+
+        /* if we find the var => return */
+		if (strcmp(name, p->name) == 0){
+			return p;
 		}
-		p=&((*p)->next);
-	}
+		else{
+			p = p->next;
+		}
 
-	return NIL(VarDecl);
+    }
+
+    return NIL(VarDecl);
+
 
 }
 
@@ -231,9 +474,10 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
 	class->isObject = isObject_param;
 
 	class->tmp = FALSE; /* Object is complete ! */
+	class->alreadyMet=FALSE;
 
 	/* We add the newly constructed class to our list of available classes */
-	addClassToList(classList, class);
+	classList = addClassToList(classList, class);
 
 	return class;
 }
@@ -266,45 +510,11 @@ ClassP IncompleteClassConstruct(char* className_param){
 	class->isObject = FALSE;
 
 	class->tmp = TRUE; /* Object is incomplete ! */
+	class->alreadyMet=FALSE;
 
 	/*Note : the class is not add to class list because not yet defined*/
 
 	return class;
-
-}
-
-/**
- * Function to add a method to a class struct (to it's chained list of methods)
- * @param class, the pointer representing the @ of the class we want to modify
- * @param method, the poiter to method to add to the class
- * @return nothing...
- */
-void addMethodToClass(ClassP class, MethodP method){
-
-	/* We add the method to the methods of the class */
-	addMethodToList(class->methods, method);
-
-}
-
-/**
- * function to add a list of method to a class
- * @param class, the class struct that will get the method add
- * @param methods, the list of methods to add
- * @return nothing...
- */
-void addMethodsToClass(ClassP class, MethDeclP methods){
-
-	/* If not an empty list of methods*/
-	if(methods!=NIL(MethDecl) && methods->method != NIL(Method)){
-
-		/* We iterate and add those methods */
-		MethDeclP* p =&(methods);
-		while((*p)->next!=NIL(MethDecl)){
-			addMethodToClass(class,(*p)->method);
-			p=&((*p)->next);
-		}
-	}
-
 
 }
 
@@ -319,7 +529,12 @@ void addAttribToClass(ClassP class, VarDeclP var){
 
 	/* We iterate to go to the end of the chained list of attributes */
 	VarDeclP* p = &(class->attributes);
-	while((*p)->next!=NIL(VarDecl)){
+	while((*p)!=NIL(VarDecl)){
+
+		if((*p)->next==NIL(VarDecl)){
+			break; /* break just before the last node (to rechain correctly) */
+		}
+
 		p=&((*p)->next);
 	}
 
@@ -335,28 +550,23 @@ void addAttribToClass(ClassP class, VarDeclP var){
  * Function to add a class to a list of class
  * @param list, the chained list of class
  * @param class, the class to add
- * @return nothing...
+ * @return the chained list
  */
-void addClassToList(ClassDeclP list, ClassP class){
+ClassDeclP addClassToList(ClassDeclP list, ClassP class){
 
 	/* Empty list */
-	if(list->class == NIL(Class)){
-		list->class = class;
-		return;
-	}
+    if(class==NIL(Class)){
+        return list;
+    }
 
-	/* We iterate to go to the end of the chained list of class */
-	ClassDeclP* p = &(list->next);
-	while((*p)->next!=NIL(ClassDecl)){
-		p=&((*p)->next);
-	}
+    ClassDeclP node = NEW(1,ClassDecl);
+    node->class = class;
+    node->next = NIL(ClassDecl);
 
-	/* rechain the list corectly */
-	ClassDeclP node = NEW(1,ClassDecl);
-	node->class = class;
-	node->next = NIL(ClassDecl);
+    /* we add our class to the list of classes */
+    node->next = list;
 
-	(*p)->next = node;
+    return node;
 }
 
  /**
@@ -366,6 +576,11 @@ void addClassToList(ClassDeclP list, ClassP class){
  * @return the class pointer (if found) or NIL(Class) (if not found)
  */
 ClassP getClassInList(ClassDeclP list, char* className){
+
+	/* if list not defined yet */
+	if(list == NIL(ClassDecl)){
+		return NIL(Class);
+	}
 
 	/* If no class defined yet */
 	if(list->class==NIL(Class)){
@@ -378,14 +593,15 @@ ClassP getClassInList(ClassDeclP list, char* className){
 	}
 
 	/* We iterate to find the class into the chained list of class */
-	ClassDeclP* p = &(list->next);
-	while((*p)->next!=NIL(ClassDecl)){
+	ClassDeclP p = list;
+	while(p!=NIL(ClassDecl)){
 
 		/* if we find the class => return */
-		if(strcmp(className, (*p)->class->name)){
-			return (*p)->class;
+		if(strcmp(className, p->class->name) == 0){
+			return p->class;
 		}
-		p=&((*p)->next);
+
+		p=p->next;
 	}
 
 	return NIL(Class);
@@ -460,67 +676,25 @@ MethodP IncompleteMethodConstruct(char* methodName_param){
  * Function that adds a method to a list of methods
  * @param list, the list where we will add our method
  * @param method, the pointer of the method to add
- * @return nothing...
+ * @return the chained list
  */
-void addMethodToList(MethDeclP list, MethodP method){
+MethDeclP addMethodToList(MethDeclP list, MethodP method){
 
-	/* Empty list case */
-	if(list->method==NIL(Method)){
-		list->method = method;
-		list->next = NIL(MethDecl);
-		return;
-	}
+    /* Empty method case */
+    if(method==NIL(Method)){
+        return list;
+    }
 
-	/* We iterate to go to the end of the chained list of methods */
-	MethDeclP* p = &(list);
+    MethDeclP node = NEW(1,MethDecl);
+    node->method = method;
+    node->next = NIL(MethDecl);
 
-	while((*p)->next!=NIL(MethDecl)){
-		p=&((*p)->next);
-	}
+    /* we add our method to the list of methods */
+    node->next = list;
 
-	MethDeclP node = NEW(1,MethDecl);
-	node->method = method;
-	node->next = NIL(MethDecl);
-
-	/* we add our method to the list of methods */
-	(*p)->next=node;
-
+    return node;
 }
 
-/**
- * Function to add multiples methods to a list of method
- * @param list, the list of Methods to modify
- * @param list2, the list of methods to add
- * @return nothing...
- */
-void addMethodsToList(MethDeclP list, MethDeclP list2){
-
-	/* Empty list cases */
-	if(list2 == NIL(MethDecl)){
-		return;	/* List to add is empty => nothing to do */
-	}
-	if(list == NIL(MethDecl)){
-		list->method = list2->method;
-		list->next = list2->next;
-		return;	
-	}
-	
-	/* We iterate to go to the end of the chained list of methods */
-	MethDeclP* p = &(list);
-
-	while((*p)->next!=NIL(MethDecl)){
-		p=&((*p)->next);
-	}
-
-	MethDeclP node = NEW(1,MethDecl);
-	node->method = list2->method;
-	node->next = list2->next;
-
-	/* we add our method to the list of methods */
-	(*p)->next=node;
-
-
-}
 
 /* Function to find a method in a list of method
  * @param list, the list we are searching in
@@ -529,20 +703,25 @@ void addMethodsToList(MethDeclP list, MethDeclP list2){
 */
 MethodP getMethodInList(MethDeclP list, char* methodName){
 
+	/* If the list is not defined yet */
+	if(list==NIL(MethDecl)){
+		return NIL(Method);
+	}
+
 	/* If no method in the list yet */
 	if(list->method==NIL(Method)){
 		return NIL(Method);
 	}
 
 	/* We iterate to find the class into the chained list of class */
-	MethDeclP* p = &(list->next);
-	while((*p)->next!=NIL(MethDecl)){
+	MethDeclP p = list;
+	while(p!=NIL(MethDecl)){
 
 		/* if we find the class => return */
-		if(strcmp(methodName, (*p)->method->name)){
-			return (*p)->method;
+		if(strcmp(methodName, p->method->name) == 0){
+			return p->method;
 		}
-		p=&((*p)->next);
+		p=p->next;
 	}
 
 	return NIL(Method);

@@ -4,8 +4,12 @@ void _Init(){
 	/* COMMENT INIT LES CLASSES PREDEF ?
 	   QUEL TYPE DE RETOUR POUR LES CONSTRUCTEURS ?
 	   QUELLE CLASSE POUR LE CHAMP DE LA CLASSE PREDEF ?
-	   CLASSE PREDEF POSSEDE CHAMP ?
-	VarDeclP attInt= {"value",&Integer,NIL(VarDecl)};
-	MethodP IntConstructor = ConstructMethod("Integer Constructor",attInt, &Integer,&Integer,)
-	*/
+	   CLASSE PREDEF POSSEDE CHAMP ? */
+	
+	/* Predefined class */
+	/* 		(className, SuperClass, Constructor,    Header    , Attributes, Methods, predef, Object) */
+	ConstructClass("Integer",NIL(Class),NIL(Method),NIL(VarDecl), NIL(VarDecl),NIL(MethDecl), TRUE, FALSE);
+	ConstructClass("String",NIL(Class),NIL(Method),NIL(VarDecl), NIL(VarDecl),NIL(MethDecl), TRUE, FALSE);
+
+	
 }

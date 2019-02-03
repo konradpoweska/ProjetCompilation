@@ -67,7 +67,7 @@ typedef enum _Label{
 
 	L_CAST,			/* Cast : (ClassName Expression) => AST with 2 children : 1=TreeP (is a leaf(Class)), 2=TreeP */
 
-	
+
 
 
 
@@ -94,6 +94,9 @@ typedef enum _IdentNature{
 typedef struct _Decl{
 	char *name;
 	IdentNature nature;
+
+	bool isVar;
+
 	struct _Class* type;
 
 	struct _Tree* initialValue;
@@ -137,6 +140,7 @@ typedef struct _Class{
 	bool isObject;				/* Is the class an Object (static class) ?  (object cannot be derived (no SubClass)) */
 
 	bool tmp;			/*Is the class a temporary found name ? (before the declaration) */
+	bool alreadyMet;	/* For context verif : do we have already met the class ? */
 
 } Class, *ClassP;
 
@@ -226,15 +230,26 @@ TreeP makeLeafClass(Label label, ClassP class);			/* leaf (class) 		*/
 TreeP makeLeafMethod(Label label, MethodP method);		/* leaf (method) 		*/
 TreeP makeTree(Label label, int nbChildren, ...);	    /* node of the tree 	*/
 
-/* Printing the AST */
-void printAST(TreeP decls, TreeP main);
+/* return child N°i (i goes from 0 to N-1) */
+TreeP getChild(TreeP tree, int i);
+
+/* Printing the AST and lists */
+void printAST(TreeP main);
+void printExpr(TreeP expr, int depth);
+void printOpBinaire(char op);
+void printClass(ClassP c);
+void printMethod(MethodP m);
+void printFullClassList(ClassDeclP list);
+void printClassList(ClassDeclP list);
+void printMethodList(MethDeclP list);
+void printVarList(VarDeclP list);
 
 
 
 /********************************* Functions relative to the Variables (VarDecl struct) *********************************/
 
 /* ""Constructor"" for an Ident (variable) */
-VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param);
+VarDeclP ConstructVar(char * name_param,IdentNature nature_param, ClassP type_param, bool var_param);
 VarDeclP ConstructInitialisedVar(char * name_param,IdentNature nature_param, ClassP type_param, TreeP initValue_param);
 
 /* Method to get a var into a list of var */
@@ -252,13 +267,11 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
 
 ClassP IncompleteClassConstruct(char* className_param);		/* Construct an temporary class (use to check if the class is defined) */
 
-void addMethodToClass(ClassP class, MethodP method);		/* function to add a method to a class */
-void addMethodsToClass(ClassP class, MethDeclP methods);	/* function to add a list of method to a class */
 void addAttribToClass(ClassP class, VarDeclP var);			/* function to add an attribute to a class */
 
 /********************************* Functions relative to the list of class struct (ClassDecl) *********************************/
 
-void addClassToList(ClassDeclP list, ClassP class);		 /* function to add a class to a list of class */
+ClassDeclP addClassToList(ClassDeclP list, ClassP class);	 /* function to add a class to a list of class */
 ClassP getClassInList(ClassDeclP list, char* className); /* function to find a class in a list of class */
 
 
@@ -275,8 +288,7 @@ MethodP IncompleteMethodConstruct(char* methodName_param); /* Construct an tempo
 
 /********************************* Functions relative to the list of method struct (MethDecl) *********************************/
 
-void addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
-void addMethodsToList(MethDeclP list, MethDeclP list2);	/* function to add multiples methods to a list of method */
+MethDeclP addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
 MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method */
 
 
