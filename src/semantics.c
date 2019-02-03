@@ -2,6 +2,7 @@
 #include "semantics.h"
 #include "common.h"
 #include "init.h" // access to globals
+#include "structures.h"
 #include <string.h>
 
 
@@ -33,6 +34,12 @@ void undoAppendEnv(VarDeclP* const undoBuff) {
 
 
 ////// LINKERS //////
+/*These methods return the actual object.
+ * For example, for a method it will return the method as it has been declared, so we have access to parameters types.
+ * This allows to have all the necessary information everywhere the method is called.
+ * This is why it takes a potentially temporary struct : if it's just a call, we will only have the name,
+ * and we go through the environment to link that name to the complete declaration.
+ */
 
 ClassP getClass(ClassP* class) {
   if(class == NIL(ClassP) || *class == NIL(Class)) {
@@ -40,9 +47,11 @@ ClassP getClass(ClassP* class) {
     exit(UNEXPECTED);
   }
 
+    //class is not temporary
   if(!(*class)->tmp){
     return *class;
   }
+
   ClassP realClass = getClassInList(classList, (*class)->name);
   if(realClass == NIL(Class)){
     printError("Class %s has not been declared\n", (*class)->name);
@@ -59,9 +68,11 @@ VarDeclP getVarDecl(VarDeclP* var, VarDeclP env) {
     exit(UNEXPECTED);
   }
 
+    //var is not temporary
   /*if(!(*var)->tmp){
     return *var;
   }*/
+
   VarDeclP realVar = getVarInList(env, (*var)->name);
   if(realVar == NIL(VarDecl)){
     printError("Var %s has not been declared\n", (*var)->name);
@@ -78,9 +89,11 @@ MethodP getMethod(MethodP* method, ClassP class) {
     exit(UNEXPECTED);
   }
 
+  //method is not temporary
   if(!(*method)->tmp){
     return *method;
   }
+
   MethodP realMethod = getMethodInList(class->methods, (*method)->name);
   if(realMethod == NIL(Method)){
     printError("Method %s does not exist in class %s\n", (*method)->name, (class)->name);
@@ -160,7 +173,8 @@ bool hasCopyInList(MethDeclP list, MethodP method, MethodP *copy){
 }
 
 bool isSurcharge(ClassP class, MethodP method){
-  if(hasCopyInList(class->methods, method, NIL(MethodP))){//another method exists in the class with the same name
+    //another method exists in the class with the same name
+  if(hasCopyInList(class->methods, method, NIL(MethodP))){
     printError("Redefinition of method %s in class %s", method->name, class->name);
     exit(CONTEXT_ERROR);
   }
@@ -169,8 +183,10 @@ bool isSurcharge(ClassP class, MethodP method){
     class = class->superClass;
     MethodP eventualCopy = NIL(Method);
 
-    if(hasCopyInList(class->methods, method, &eventualCopy)){//same name in super class
-      if(!sameArgList(eventualCopy->parameters, method->parameters)){//different parameters means its a surcharge
+      //same name in super class
+    if(hasCopyInList(class->methods, method, &eventualCopy)){
+        //different parameters means its a surcharge
+      if(!sameArgList(eventualCopy->parameters, method->parameters)){
         printError("Surcharge of method %s from class %s", eventualCopy->name, class->name);
         exit(CONTEXT_ERROR);
       }
@@ -245,6 +261,27 @@ ClassP getTypeITE(TreeP expr, VarDeclP env) {
   }
 }
 
+/* Returns true if the instanciated class is declared and in scope
+ */
+bool checkNEW(TreeP expr, VarDeclP env){
+    if(expr == NIL(Tree) || expr->opLabel != L_NEW) {
+        printError("invalid argument in %s\n", __func__);
+        exit(UNEXPECTED);
+    }
+
+    ClassP class = expr->u.children[0]->u.class;
+
+    if(class == NIL(Class)) exit(UNEXPECTED);
+
+
+    if(getClassInList(classList, class->name) == NIL(Class)){
+        printError("Trying to instantiate non declared class %s", class->name);
+        exit(CONTEXT_ERROR);
+    }
+
+    return TRUE;
+}
+
 ClassP getTypeNEW(TreeP expr, VarDeclP env) {
   if(expr == NIL(Tree) || expr->opLabel != L_NEW) {
     printError("invalid argument in %s\n", __func__);
@@ -267,11 +304,69 @@ ClassP getTypeSELEC(TreeP expr, VarDeclP env) {
   return NULL; //A FINIR
 
 }
+/*
+bool checkMSG(TreeP expr, VarDeclP env){
+    if(expr->opLabel != L_MESSAGE) exit(UNEXPECTED);
+
+    MethodP calledMethod = expr->u.children[1]->u.method;
+
+    //malformed tree
+    if(calledMethod == NIL(Method)) exit(UNEXPECTED);
+
+    if(calledMethod->tmp){
+        //this checks if the method exists in the class
+        getMethod(&calledMethod, getType(expr->u.children[0], env));
+    }
+
+    return TRUE;
+}
+ */
 
 ClassP getTypeMSG(TreeP expr, VarDeclP env) {
   if(expr->opLabel != L_MESSAGE) exit(UNEXPECTED);
 
-  return NULL; //A FINIR
+    MethodP calledMethod = expr->u.children[1]->u.method;
+
+    //malformed tree
+    if(calledMethod == NIL(Method)) exit(UNEXPECTED);
+
+    //checkMSG(expr, env);
+
+    if(calledMethod->tmp){
+        //this checks if the method exists in the class
+        getMethod(&calledMethod, getType(expr->u.children[0], env));
+    }
+
+  return calledMethod->returnType;
+}
+
+/* Returns true if all different types are correctly declared and in the scope;
+ * and the class we are trying to cast to is a superclass of the casted expression.
+ */
+bool checkCAST(TreeP expr, VarDeclP env){
+    if(expr == NULL || expr->opLabel != L_CAST) exit(UNEXPECTED);
+
+    ClassP class = expr->u.children[0]->u.class;
+
+    //malformed tree
+    if(class == NIL(Class)) exit(UNEXPECTED);
+
+    ClassP realClass = getClassInList(classList, class->name);
+
+    if(realClass == NIL(Class)){
+        printError("cast into unknown type : %s", class->name);
+        exit(CONTEXT_ERROR);
+    }
+
+    //checks are performed by getType, so we do not need to check that originalClass does exist
+    ClassP originalClass = getType(expr->u.children[1], env);
+
+    if(!derivesType(originalClass, realClass)){
+        printError("unauthorised cast : %s is not a subclass of %s", originalClass->name, realClass->name);
+        exit(CONTEXT_ERROR);
+    }
+
+    return TRUE;
 }
 
 ClassP getTypeCAST(TreeP expr, VarDeclP env) {
