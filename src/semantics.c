@@ -7,12 +7,27 @@
 
 ////// UTILITIES //////
 
-void appendEnv(VarDeclP thisEnv, VarDeclP superEnv) {
-  // append superEnv to the end of thisEnv
+void appendEnv(VarDeclP thisEnv, const VarDeclP superEnv, VarDeclP* const undoBuff) {
   while(thisEnv->next != NIL(VarDecl)){
       thisEnv = thisEnv->next;
   }
+
+  if(undoBuff == NIL(VarDeclP))
+    printWarning("internal: no undo buffer provided in %s\n", __func__);
+  else
+    *undoBuff = thisEnv;
+
   thisEnv->next = superEnv;
+}
+
+void undoAppendEnv(VarDeclP* const undoBuff) {
+  if(undoBuff == NIL(VarDeclP) || *undoBuff == NIL(VarDecl)) {
+      printError("null pointer passed to %s\n", __func__);
+      exit(UNEXPECTED);
+  }
+
+  (*undoBuff)->next = NIL(VarDecl);
+  *undoBuff = NIL(VarDecl);
 }
 
 
@@ -20,6 +35,11 @@ void appendEnv(VarDeclP thisEnv, VarDeclP superEnv) {
 ////// LINKERS //////
 
 ClassP getClass(ClassP* class) {
+  if(class == NIL(ClassP) || *class == NIL(Class)) {
+    printError("null pointer passed to %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+
   if(!(*class)->tmp){
     return *class;
   }
@@ -34,6 +54,11 @@ ClassP getClass(ClassP* class) {
 
 
 VarDeclP getVarDecl(VarDeclP* var, VarDeclP env) {
+  if(var == NIL(VarDeclP) || *var == NIL(VarDecl)) {
+    printError("null pointer passed to %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+
   /*if(!(*var)->tmp){
     return *var;
   }*/
@@ -48,6 +73,11 @@ VarDeclP getVarDecl(VarDeclP* var, VarDeclP env) {
 
 
 MethodP getMethod(MethodP* method, ClassP class) {
+  if(method == NIL(MethodP) || *method == NIL(Method)) {
+    printError("null pointer passed to %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+
   if(!(*method)->tmp){
     return *method;
   }
@@ -70,7 +100,7 @@ bool checkVarDecl(VarDeclP var, VarDeclP env) {
 
   if(var->initialValue != NIL(Tree)){
     checkBlock(var->initialValue, env);//Checks if affected expression is valid
-    ClassP initialValType = getType(var->initialValue);
+    ClassP initialValType = getType(var->initialValue, env);
     if(!derivesType(initialValType, var->type)){
       printError("Expected %s, got %s\n", var->type->name, initialValType->name);
       exit(CONTEXT_ERROR);
@@ -90,6 +120,11 @@ bool checkBlock(TreeP block, VarDeclP env) {
 
 
 bool sameArgList(VarDeclP l1, VarDeclP l2) {
+  if(l1 == NIL(VarDecl) || l2 == NIL(VarDecl)) {
+    printError("null argument passed to %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+
   while(l1 != l2) { // if pointers are equal, lists are equal
 
     if(l1 == NIL(VarDecl) || l2 == NIL(VarDecl))
@@ -149,13 +184,13 @@ bool checkClassConstructorHeader(ClassP class) {
   MethodP constr;
 
   if(class == NIL(Class) || (constr = class->constructor) == NIL(Method)) {
-    printError("null argument in %d\n", __func__);
+    printError("null argument in %s\n", __func__);
     exit(UNEXPECTED);
   }
 
   if(strcmp(constr->name, class->name) != 0) {
     printError(
-      "in %d, constructor has different name than its class: %s != %s\n",
+      "in %s, constructor has different name than its class: %s != %s\n",
       __func__, constr->name, class->name);
     exit(UNEXPECTED);
   }
@@ -175,24 +210,33 @@ bool checkClassConstructorHeader(ClassP class) {
 
 
 
-bool checkClass(ClassP* class) {
-  /* - check header & constructor
+bool checkClass(ClassP class) {
+  /* - check circular inheritance
+   * - check header & constructor
+   * - add var-arguments to attributes
    * - check type of every attribute
-   * - check each method body
    * - forbid method overloading
-   * - set each method owner
+   * - check each method body + set owner
    */
+
+  getClass(&class);
+
+  checkClassConstructorHeader(class);
+
   return FALSE;
 }
 
 
 ////// TYPE CHECKING //////
 
-ClassP getTypeITE(TreeP expr) {
-  if(expr->opLabel != L_IFTHENELSE) exit(UNEXPECTED);
+ClassP getTypeITE(TreeP expr, VarDeclP env) {
+  if(expr == NIL(Tree) || expr->opLabel != L_IFTHENELSE) {
+    printError("invalid argument in %s\n", __func__);
+    exit(UNEXPECTED);
+  }
 
-  const ClassP thenType = getType(expr->u.children[1]);
-  const ClassP elseType = getType(expr->u.children[2]);
+  const ClassP thenType = getType(expr->u.children[1], env);
+  const ClassP elseType = getType(expr->u.children[2], env);
 
   if(thenType == elseType) return thenType;
   else {
@@ -201,58 +245,68 @@ ClassP getTypeITE(TreeP expr) {
   }
 }
 
-ClassP getTypeNEW(TreeP expr) {
-  if(expr->opLabel != L_NEW) exit(UNEXPECTED);
+ClassP getTypeNEW(TreeP expr, VarDeclP env) {
+  if(expr == NIL(Tree) || expr->opLabel != L_NEW) {
+    printError("invalid argument in %s\n", __func__);
+    exit(UNEXPECTED);
+  }
 
-  return expr->u.children[0]->u.class;
+  TreeP classNode = expr->u.children[0];
+  if(classNode == NIL(Tree) || classNode->opLabel != L_CLASS) {
+    printError("first child of L_NEW node is not a L_CLASS, in %s\n", __func__);
+  }
+
+  return getClass(&classNode->u.class);
 }
 
-ClassP getTypeSELEC(TreeP expr) {
-  if(expr->opLabel != L_NEW) exit(UNEXPECTED);
-
+ClassP getTypeSELEC(TreeP expr, VarDeclP env) {
+  if(expr == NIL(Tree) || expr->opLabel != L_SELECTION) {
+    printError("invalid argument in %s\n", __func__);
+    exit(UNEXPECTED);
+  }
   return NULL; //A FINIR
 
 }
 
-ClassP getTypeMSG(TreeP expr) {
+ClassP getTypeMSG(TreeP expr, VarDeclP env) {
   if(expr->opLabel != L_MESSAGE) exit(UNEXPECTED);
-  
+
   return NULL; //A FINIR
 }
 
-ClassP getTypeCAST(TreeP expr) {
+ClassP getTypeCAST(TreeP expr, VarDeclP env) {
   if(expr == NULL || expr->opLabel != L_CAST) exit(UNEXPECTED);
 
   return expr->u.children[0]->u.class;
 }
 
 /* Returns type of an expression */
-ClassP getType(TreeP expr) {
+ClassP getType(TreeP expr, VarDeclP env) {
   switch(expr->opLabel) {
-    case L_IFTHENELSE: return getTypeITE(expr);
-    case L_NEW: return getTypeNEW(expr);
+    case L_IFTHENELSE: return getTypeITE(expr, env);
+    case L_NEW: return getTypeNEW(expr, env);
     case L_CONSTINT: return &Integer;
     case L_CONSTSTR: return &String;
-    case L_SELECTION: return getTypeSELEC(expr);
-    case L_MESSAGE: return getTypeMSG(expr);
-    case L_CAST: return getTypeCAST(expr);
+    case L_SELECTION: return getTypeSELEC(expr, env);
+    case L_MESSAGE: return getTypeMSG(expr, env);
+    case L_CAST: return getTypeCAST(expr, env);
     default: {
-      printError("In %s, unrecognised type of expression (label=%d)",
+      printError("In %s, unrecognised type of expression (label=%d)\n",
         __func__, expr->opLabel);
       exit(UNEXPECTED);
     }
   }
 }
 
-/* Returns TRUE if targetType is supertype of thisType */
-bool derivesType(ClassP thisType, ClassP targetType) {
-  if(targetType == NIL(Class)) exit(UNEXPECTED);
+/* Returns TRUE if "type" is equal to or subtype of "superType" */
+bool derivesType(ClassP type, ClassP superType) {
+  if(superType == NIL(Class)) exit(UNEXPECTED);
 
-  if(thisType == NIL(Class)) return FALSE;
+  if(type == NIL(Class)) return FALSE;
   // reached top of hierarchy -> no match
 
-  if(thisType == targetType) return TRUE;
+  if(type == superType) return TRUE;
 
-  return derivesType(thisType->superClass, targetType);
+  return derivesType(type->superClass, superType);
   // launch recursive with upper level
 }
