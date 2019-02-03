@@ -1,6 +1,7 @@
 #include "structures.h"
 #include "grammar.y.h"
 #include "common.h"
+#include "init.h"
 
 #include <unistd.h>
 #include <stdarg.h>
@@ -16,6 +17,8 @@ int errorCode;
 extern int yyparse();
 extern int yylineno;
 
+extern ClassDeclP classList;
+
 /* Appel:
  *   tp [-option]* programme.txt
  * Les options doivent apparaitre avant le nom du fichier du programme.
@@ -24,6 +27,9 @@ extern int yylineno;
 int main(int argc, char **argv) {
   int fi;
   int i, res;
+
+  /* Init the compiler */
+  _Init();
 
   for(i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {

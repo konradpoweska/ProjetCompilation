@@ -26,6 +26,8 @@
 	#include "structures.h"
 	#include "common.h"
 
+	#include "stdio.h"
+
 	extern int yylex();
 	extern void yyerror();
 	extern ClassDeclP classList;
@@ -65,7 +67,7 @@
 %}
 
 %%
-Program : LDeclsOpt Bloc { /* TODO 2ePassageArbre(...) puis VerifClasses(...) puis VerifContextuelle(...) genCode(...) */};
+Program : LDeclsOpt Bloc { printFullClassList(classList); printExpr($2,0);/* TODO 2ePassageArbre(...) puis VerifClasses(...) puis VerifContextuelle(...) genCode(...) */};
 
 LDeclsOpt : Class LDeclsOpt 
 | Object LDeclsOpt 
@@ -95,7 +97,7 @@ ParamDecl : T_VAR T_IDENT ':' T_IDENTCLASS {
 
 				ClassP type =  typeForVariables($4);
 
-				VarDeclP var = ConstructVar($2, nature,type); /* Construct the variable (with what we have) */
+				VarDeclP var = ConstructVar($2, nature,type, TRUE); /* Construct the variable (with what we have) */
 				$$ = var; /* Add to the AST the fact that we found a variable */}
 
 | T_IDENT ':' T_IDENTCLASS {	
@@ -103,7 +105,7 @@ ParamDecl : T_VAR T_IDENT ':' T_IDENTCLASS {
 
 				ClassP type =  typeForVariables($3);
 
-				VarDeclP var = ConstructVar($1, nature,type); /* Construct the variable (with what we have) */
+				VarDeclP var = ConstructVar($1, nature,type, FALSE); /* Construct the variable (with what we have) */
 				$$ = var; /* Add to the AST the fact that we found a variable */};
 
 LParamOpt : LParam  {$$ = $1; /* List of parameters (AST) */}	
@@ -126,7 +128,7 @@ ListOptDecl : Decl ListOptDecl {$1->next = $2; /* chaining the list */
 | {$$ = NIL(VarDecl); /*End of list*/};
 
 Decl : T_VAR T_IDENT ':' T_IDENTCLASS';'	{	IdentNature nature = chooseNature(ATTRIBUTE, $2);
-							VarDeclP var = ConstructVar($2, nature, typeForVariables($4));
+							VarDeclP var = ConstructVar($2, nature, typeForVariables($4), TRUE);
 							$$ = var;};
 
 
@@ -140,7 +142,7 @@ DefConstructObj : T_DEF T_IDENTCLASS T_IS Bloc {
 							$$ = ConstructMethod($2,NIL(VarDecl),tmpClass,tmpClass,$4,FALSE); /* Construct the constructor with the current infos we have */};
 
 
-ListOptMethod : Method ListOptMethod {addMethodToList($$,$1); addMethodsToList($$,$2); /*Chaining the list*/}
+ListOptMethod : Method ListOptMethod {$$=addMethodToList($2,$1); /*Chaining the list*/}
 | {$$ = NIL(MethDecl);};
 
 Method : Override T_DEF T_IDENT '('LParamDeclOpt')'':'T_IDENTCLASS T_AFFECT Expression { 
@@ -179,7 +181,7 @@ Expression : Instance {$$ = $1;}
 | T_SUB Expression %prec UNARY 	{$$ = makeTree(L_UNARYMINUS, 1, $2);}
 | Expression T_CONCAT Expression{$$ = makeTree(L_CONCAT, 2, $1, $3);} ;
 
-Selection : Instance'.'T_IDENT {$$ = makeTree(L_SELECTION, 2, $1, makeLeafIdent(L_ID,ConstructVar($3,chooseNature(ATTRIBUTE,$3),NIL(Class))));
+Selection : Instance'.'T_IDENT {$$ = makeTree(L_SELECTION, 2, $1, makeLeafIdent(L_ID,ConstructVar($3,chooseNature(ATTRIBUTE,$3),NIL(Class), FALSE)));
 									/*AST with the selection, we create a var (of unknown type for the moment) that must be an attribute*/} ;
 
 Instance : '('T_IDENTCLASS Expression ')' {
@@ -192,7 +194,7 @@ Instance : '('T_IDENTCLASS Expression ')' {
 	$$ = makeTree(L_CAST, 2, makeLeafClass(L_CLASS,type), $3);}
 
 | T_IDENT {	IdentNature nature = chooseNature(UNDEFINED, $1);
-			VarDeclP var = ConstructVar($1, nature, NIL(Class));
+			VarDeclP var = ConstructVar($1, nature, NIL(Class), FALSE);
 			$$ = makeLeafIdent(L_ID, var);}
 
 | T_CONST {$$ = makeLeafInt(L_CONSTINT, $1);}
