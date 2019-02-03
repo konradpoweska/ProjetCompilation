@@ -195,6 +195,25 @@ bool isSurcharge(ClassP class, MethodP method){
   return FALSE;
 }
 
+bool checkCircularInheritance(ClassP class) {
+
+  if(class == NIL(Class)){
+    printError("Class %s has not been declared\n", (*class)->name);
+    exit(CONTEXT_ERROR);
+  }
+
+  while(class->superClass != NIL(Class)){
+
+    class -> alreadyMet = TRUE;
+    class = class->superClass;
+    if(class -> alreadyMet == TRUE)
+      return FALSE;  //this class has a circular inheritance
+    }
+    return TRUE; //this class hasn't a circular inheritance
+
+}
+
+
 bool checkClassConstructorHeader(ClassP class) {
   // assuming class & its contructor are not temp
   MethodP constr;
@@ -236,6 +255,8 @@ bool checkClass(ClassP class) {
    */
 
   getClass(&class);
+
+  checkCircularInheritance(class);
 
   checkClassConstructorHeader(class);
 
