@@ -202,6 +202,33 @@ bool checkNEW(TreeP expr, VarDeclP env){
     return TRUE;
 }
 
+bool checkID(TreeP expr, VarDeclP env){
+    if(expr == NIL(Tree) || expr->opLabel != L_ID) {
+        printError("invalid argument in %s\n", __func__);
+        exit(UNEXPECTED);
+    }
+
+    //all checks already performed
+    return TRUE;
+}
+
+bool checkSELEC(TreeP expr, VarDeclP env){
+    if(expr == NIL(Tree) || expr->opLabel != L_SELECTION) {
+        printError("invalid argument in %s\n", __func__);
+        exit(UNEXPECTED);
+    }
+
+    TreeP identifier = expr->u.children[1];
+    ClassP selectedOn = getType(expr->u.children[0]);
+
+    //check that the selected value is an attribute of the selected on class
+    if(getVarInList(selectedOn->attributes, identifier->u.ListDecl->name) == NIL(VarDecl)){
+        printError("%s is not an attribute of %s", identifier->u.ListDecl->name, selectedOn->name);
+        exit(CONTEXT_ERROR);
+    }
+
+    return checkID(identifier, env);
+}
 
 bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
   if(
