@@ -75,6 +75,8 @@ bool checkClassConstructorHeader(ClassP class);
 
 bool checkClass(ClassP class);
 
+bool checkAllClasses();
+
 
 
 

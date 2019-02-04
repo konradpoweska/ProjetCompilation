@@ -294,7 +294,7 @@ bool checkExpression(TreeP expr, VarDeclP env) {
   }
 
   switch(expr->opLabel) {
-    case L_BLOC: checkBlock(expr, env);
+    case L_BLOC: return checkBlock(expr, env);
     default:
       printError("In %s, unrecognised type of expression (label=%d)\n",
         __func__, expr->opLabel);
@@ -446,6 +446,16 @@ bool checkClass(ClassP class) {
   checkClassConstructorHeader(class);
 
   return FALSE;
+}
+
+
+bool checkAllClasses() {
+  ClassDeclP clist = classList; // keep global list untouched
+
+  while(clist != NIL(ClassDecl)) {
+    checkClass(clist->class);
+    clist = clist->next;
+  }
 }
 
 
