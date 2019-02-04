@@ -4,9 +4,23 @@
 #include "structures.h"
 
 // UTILITIES
-void appendEnv(VarDeclP thisEnv, const VarDeclP superEnv, VarDeclP* const undoBuff);
+void appendEnv(VarDeclP* localEnv, const VarDeclP superEnv,
+                VarDeclP** const undoBuff);
 
-void undoAppendEnv(VarDeclP* const undoBuff);
+void undoAppendEnv(VarDeclP** const undoBuff);
+
+/* Usage example:
+
+VarDeclP localEnv, superEnv; // works with empty pointers
+VarDeclP* undoBuff; // mandatory buffer
+
+appendEnv(&localEnv, superEnv, &undoBuff);
+// here localEnv 'contains" superEnv
+undoAppendEnv(&undoBuff);
+// and here it's back to normal
+
+ */
+
 
 // LINKERS
 ClassP getClass(ClassP* class);

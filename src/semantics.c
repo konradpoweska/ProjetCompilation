@@ -8,27 +8,37 @@
 
 ////// UTILITIES //////
 
-void appendEnv(VarDeclP thisEnv, const VarDeclP superEnv, VarDeclP* const undoBuff) {
-  while(thisEnv->next != NIL(VarDecl)){
-      thisEnv = thisEnv->next;
+void appendEnv(VarDeclP* localEnv, const VarDeclP superEnv,
+                VarDeclP** const undoBuff) {
+
+  if(localEnv == NIL(VarDeclP) || undoBuff == NIL(VarDeclP*)) {
+    printError("null argument passed to %s\n", __func__);
+    exit(UNEXPECTED);
   }
 
-  if(undoBuff == NIL(VarDeclP))
-    printWarning("internal: no undo buffer provided in %s\n", __func__);
-  else
-    *undoBuff = thisEnv;
+  VarDeclP l = *localEnv;
 
-  thisEnv->next = superEnv;
+  if(l == NIL(VarDecl)) { // if empty localEnv, set it to superEnv
+    *localEnv = superEnv;
+    *undoBuff = localEnv;
+    return;
+  }
+
+  while(l->next != NIL(VarDecl))
+    l = l->next;
+
+  l->next = superEnv;
+  *undoBuff = &l->next;
 }
 
-void undoAppendEnv(VarDeclP* const undoBuff) {
-  if(undoBuff == NIL(VarDeclP) || *undoBuff == NIL(VarDecl)) {
+void undoAppendEnv(VarDeclP** const undoBuff) {
+  if(undoBuff == NIL(VarDeclP*) || *undoBuff == NIL(VarDeclP)) {
       printError("null pointer passed to %s\n", __func__);
       exit(UNEXPECTED);
   }
 
-  (*undoBuff)->next = NIL(VarDecl);
-  *undoBuff = NIL(VarDecl);
+  **undoBuff = NIL(VarDecl);
+  *undoBuff = NIL(VarDeclP);
 }
 
 
@@ -198,8 +208,8 @@ bool isSurcharge(ClassP class, MethodP method){
 bool checkCircularInheritance(ClassP class) {
 
   if(class == NIL(Class)){
-    printError("Class %s has not been declared\n", (*class)->name);
-    exit(CONTEXT_ERROR);
+    printError("null argument in %s\n", __func__);
+    exit(UNEXPECTED);
   }
 
   while(class->superClass != NIL(Class)){
