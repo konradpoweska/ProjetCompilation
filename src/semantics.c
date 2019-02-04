@@ -449,8 +449,8 @@ ClassP getTypeSELEC(TreeP expr) {
     printError("invalid argument in %s\n", __func__);
     exit(UNEXPECTED);
   }
-  return NULL; //A FINIR
 
+  return getType(expr->u.children[1]);
 }
 
 
@@ -472,6 +472,14 @@ ClassP getTypeCAST(TreeP expr) {
   return expr->u.children[0]->u.class;
 }
 
+ClassP getTypeID(TreeP expr){
+  if(expr == NIL(Tree) || expr->opLabel != L_ID) {
+    printError("invalid argument in %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+
+  return expr->u.ListDecl->type;
+}
 
 /* Returns the type (ClassP) returned by an expression */
 ClassP getType(TreeP expr) {
@@ -493,6 +501,7 @@ ClassP getType(TreeP expr) {
     case L_SELECTION: return getTypeSELEC(expr);
     case L_MESSAGE: return getTypeMSG(expr);
     case L_CAST: return getTypeCAST(expr);
+    case L_ID: return getTypeID(expr);
 
     default:
       printError("In %s, unrecognised type of expression (label=%d)\n",
