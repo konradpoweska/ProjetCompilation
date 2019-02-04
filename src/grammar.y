@@ -67,7 +67,7 @@
 %}
 
 %%
-Program : LDeclsOpt Bloc { printFullClassList(classList); printExpr($2,0);/* TODO 2ePassageArbre(...) puis VerifClasses(...) puis VerifContextuelle(...) genCode(...) */};
+Program : LDeclsOpt Bloc { /*printFullClassList(classList);*/printExpr($2,0);/* TODO 2ePassageArbre(...) puis VerifClasses(...) puis VerifContextuelle(...) genCode(...) */};
 
 LDeclsOpt : Class LDeclsOpt 
 | Object LDeclsOpt 
