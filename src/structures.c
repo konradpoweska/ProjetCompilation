@@ -19,13 +19,11 @@ extern ClassDeclP classList;
 
 /********************************* Functions relative to the AST (Tree struct) *********************************/
 
-/* Fonction AUXILIAIRE pour la construction d'arbre : renvoie un squelette
- * d'arbre pour 'nbChildren' fils et d'etiquette 'op' donnee. L'appelant
- * doit lui-même stocker ses fils dans la strucutre que MakeNode renvoie
- */
 /**
- *
- *
+ * Function that create a node of the Tree
+ * @param nbChildren, the number of the children this node has
+ * @param label, the label corresponding to this node
+ * @return the constructed tree
  */
 TreeP makeNode(int nbChildren, Label label) {
 	TreeP tree = NEW(1, Tree);
@@ -34,16 +32,13 @@ TreeP makeNode(int nbChildren, Label label) {
 	return(tree);
 }
 
-/* Construction d'un arbre a nbChildren branches, passees en parametres
- * 'op' est une etiquette symbolique qui permet de memoriser la construction
- * dans le programme source qui est representee par cet arbre.
- * Une liste preliminaire d'etiquettes est dans tp.h; il faut l'enrichir selon
- * vos besoins.
- * Cette fonction prend un nombre variable d'arguments: au moins deux.
- * Les eventuels arguments supplementaires doivent etre de type TreeP
- * (defini dans tp.h)
- */
-/** A FINIR
+
+/**
+ * Function that construct a tree
+ * @param label, the first label of the tree
+ * @param nbChildren, the number of children of the tree
+ * @param ..., each children of the tree (each one is a TreeP)
+ * @return the newly built tree
  */
 TreeP makeTree(Label label, int nbChildren, ...) {
   va_list args;
@@ -58,7 +53,12 @@ TreeP makeTree(Label label, int nbChildren, ...) {
 }
 
 
-/* Constructeur de feuille dont la valeur est un entier */
+/**
+ * Function that build a integer leaf of the tree
+ * @param label, the label of the leaf
+ * @param val, the value of the leaf
+ * @return the leaf
+ */
 TreeP makeLeafInt(Label label, int val) {
   TreeP tree = makeNode(0, label);
   tree->u.valInt = val;
@@ -66,8 +66,11 @@ TreeP makeLeafInt(Label label, int val) {
 }
 
 
-/* Constructeur de feuille dont la valeur est une chaine de caracteres.
- * Construit un doublet pour la future variable et stocke son nom dedans.
+/**
+ * Function that build a string leaf of the tree
+ * @param label, the label of the leaf
+ * @param val, the value of the leaf
+ * @return the leaf
  */
 TreeP makeLeafStr(Label label, char *str) {
   TreeP tree = makeNode(0, label);
@@ -75,8 +78,11 @@ TreeP makeLeafStr(Label label, char *str) {
   return(tree);
 }
 
-/* Constructeur de feuille dont la valeur est une chaine de caracteres.
- * Construit un doublet pour la future variable et stocke son nom dedans.
+/**
+ * Function that build a leaf with a variable (VarDeclP) 
+ * @param label, the label of the leaf
+ * @param val, the value of the leaf
+ * @return the leaf
  */
 TreeP makeLeafIdent(Label label, VarDeclP ident) {
   TreeP tree = makeNode(0, label);
@@ -85,6 +91,12 @@ TreeP makeLeafIdent(Label label, VarDeclP ident) {
 }
 
 
+/**
+ * Function that build a leaf with a class (classP)
+ * @param label, the label of the leaf
+ * @param val, the value of the leaf
+ * @return the leaf
+ */
 TreeP makeLeafClass(Label label, ClassP class){
 
 	TreeP tree = makeNode(0, label);
@@ -93,6 +105,12 @@ TreeP makeLeafClass(Label label, ClassP class){
 
 }
 
+/**
+ * Function that build a leaf with a method (MethodP)
+ * @param label, the label of the leaf
+ * @param val, the value of the leaf
+ * @return the leaf
+ */
 TreeP makeLeafMethod(Label label, MethodP method){
 
 	TreeP tree = makeNode(0, label);
@@ -101,18 +119,24 @@ TreeP makeLeafMethod(Label label, MethodP method){
 
 }
 
-/* return child N°i (i goes from 0 to N-1) */
+/**
+ * Function that returns child N°i (i goes from 0 to N-1) 
+ * @param tree, the tree we look in
+ * @param i, the child number
+ * @return child number i
+ */
 TreeP getChild(TreeP tree, int i) {
   return tree->u.children[i];
 }
 
-/* Printing the AST and lists */
-void printAST(TreeP main){
+/**** Printing the AST and lists ****/
 
-	/* TODO */
-
-}
-
+/**
+ * Function that prints an expression
+ * @param expr, the expression to print
+ * @param depth, the level of depth we are in
+ * @return nothing...
+ */
 void printExpr (TreeP expr, int depth){
 
 	if(expr==NIL(Tree)){
@@ -201,6 +225,11 @@ void printOpBinaire(char op) {
 	}
 }
 
+/**
+ * Function that prints a class
+ * @param c, the class to print
+ * @return nothing...
+ */
 void printClass(ClassP c){
 
 	if(c == NIL(Class)){
@@ -223,6 +252,11 @@ void printClass(ClassP c){
 
 }
 
+/**
+ * Function that prints a method
+ * @param m, the method to print
+ * @return nothing...
+ */
 void printMethod(MethodP m){
 
 	if(m == NIL(Method)){
@@ -247,8 +281,9 @@ void printMethod(MethodP m){
 }
 
 /**
- * Function that prints a class list (full)
- * TODO
+ * Function that fully prints a list of classes
+ * @param list, the list of class to print
+ * @return nothing...
  */
 void printFullClassList(ClassDeclP list){
 
@@ -285,6 +320,11 @@ void printFullClassList(ClassDeclP list){
 
 }
 
+/**
+ * Function that prints a list of classes
+ * @param list, the list of class to print
+ * @return nothing...
+ */
 void printClassList(ClassDeclP list){
 
 	/* Empty list */
@@ -299,6 +339,12 @@ void printClassList(ClassDeclP list){
 
 }
 
+
+/**
+ * Function that prints a list of methods
+ * @param list, the list of method to print
+ * @return nothing...
+ */
 void printMethodList(MethDeclP list){
 
 	if(list==NIL(MethDecl)){
@@ -313,6 +359,11 @@ void printMethodList(MethDeclP list){
 
 }
 
+/**
+ * Function that prints a list of variables
+ * @param list, the list of variables to print
+ * @return nothing...
+ */
 void printVarList(VarDeclP list){
 
 	if(list==NIL(VarDecl)){
@@ -484,9 +535,9 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
 
 /**
  * Empty ""Constructor"" of a class structure
-  * NOTE : All pointers are NIL(...) because we don't have all the info at the construction here
-  * @param className_param, the name of the class (not NULL nor NIL(char) !!)
-  * @return the incomplete constructed class struct
+ * NOTE : All pointers are NIL(...) because we don't have all the info at the construction here
+ * @param className_param, the name of the class (not NULL nor NIL(char) !!)
+ * @return the incomplete constructed class struct
  */
 ClassP IncompleteClassConstruct(char* className_param){
 
@@ -518,30 +569,6 @@ ClassP IncompleteClassConstruct(char* className_param){
 
 }
 
-
-/**
- * Function to add an attribute to a class struct (to it's chained list of attributes)
- * @param class, the pointer representing the @ of the class we want to modify
- * @param var, the poiter to attribute to add to the class
- * @return nothing...
- */
-void addAttribToClass(ClassP class, VarDeclP var){
-
-	/* We iterate to go to the end of the chained list of attributes */
-	VarDeclP* p = &(class->attributes);
-	while((*p)!=NIL(VarDecl)){
-
-		if((*p)->next==NIL(VarDecl)){
-			break; /* break just before the last node (to rechain correctly) */
-		}
-
-		p=&((*p)->next);
-	}
-
-	/* we add our method to the list of attributes */
-	(*p)->next=var;
-
-}
 
 
 /********************************* Functions relative to the list of class struct (ClassDecl) *********************************/
@@ -614,7 +641,13 @@ ClassP getClassInList(ClassDeclP list, char* className){
 
 /**
  * Method """Constructor"""
- * TODO JAVADOC
+ * @param methodName_param, the name of the method (not NIL)
+ * @param parameters_param, the parameters of the method
+ * @param owner_param, the owner of the method
+ * @param returnType_param, the return type of the method (NIL if void)
+ * @param body_param, the body of the method
+ * @param redef_param, is the method a redefinition ?
+ * @return the newly constructed method
  */
 MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, ClassP owner_param,
 						 ClassP returnType_param, TreeP body_param, bool redef_param){
@@ -641,8 +674,10 @@ MethodP ConstructMethod(char* methodName_param, VarDeclP parameters_param, Class
 }
 
 /**
- * Method incomplete constructor => create incomplete methods (to be checked later on)
- * TODO JAVADOC
+ * Empty Method constructor => create incomplete methods (to be checked later on)
+ * NOTE : All pointers are NIL(...) because we don't have all the info at the construction here
+ * @param methodName_param, the name of the method 
+ * @return the newly incomplete method built
  */
 MethodP IncompleteMethodConstruct(char* methodName_param){
 
@@ -726,3 +761,4 @@ MethodP getMethodInList(MethDeclP list, char* methodName){
 
 	return NIL(Method);
 }
+

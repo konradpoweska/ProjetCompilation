@@ -267,8 +267,6 @@ ClassP ConstructClass(char* className_param,ClassP superClass_param, MethodP con
 
 ClassP IncompleteClassConstruct(char* className_param);		/* Construct an temporary class (use to check if the class is defined) */
 
-void addAttribToClass(ClassP class, VarDeclP var);			/* function to add an attribute to a class */
-
 /********************************* Functions relative to the list of class struct (ClassDecl) *********************************/
 
 ClassDeclP addClassToList(ClassDeclP list, ClassP class);	 /* function to add a class to a list of class */
@@ -290,6 +288,5 @@ MethodP IncompleteMethodConstruct(char* methodName_param); /* Construct an tempo
 
 MethDeclP addMethodToList(MethDeclP list, MethodP method);			/* function to add a method to a list of method */
 MethodP getMethodInList(MethDeclP list, char* methodName); 		/* function to find a method in a list of method */
-
 
 #endif /* end of include guard: STRUCTURES_H */
