@@ -230,7 +230,9 @@ bool checkSELEC(TreeP expr, VarDeclP env){
     return checkID(identifier, env);
 }
 
+/*Checks if provided arguments at call of method/constructor are compatible with method/constructor definition*/
 bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
+  
   if(
     exprList == NIL(Tree) ||
     exprList->opLabel != L_PARAMLIST ||
@@ -239,8 +241,49 @@ bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
       printError("invalid argument in %s\n", __func__);
       exit(UNEXPECTED);
   }
-  // TODO
-  return FALSE;
+  
+  VarDeclP param = definition; /* We are on the first param */
+
+  TreeP arg = exprList;
+
+  while(arg!=NIL(Tree)){
+
+    /* Too many arguments provided */
+    if(param == NIL(VarDecl)){
+
+        printError("Too many arguments used !");
+        exit(CONTEXT_ERROR);
+
+    }
+
+    /*Last param of the list*/
+    if(arg->nbChildren==1){
+
+        if(getType(getChild(arg,0)) != param->type){
+            printError("Invalid param type !");
+            exit(CONTEXT_ERROR);
+        }
+
+    }
+    /* Param + continue the list of param */
+    else if(arg->nbChildren==2){
+
+        if(getType(getChild(arg,0)) != param->type){
+            printError("Invalid param type !");
+            exit(CONTEXT_ERROR);
+        }
+
+        arg=getChild(arg,1);
+        param=param->next;
+    }
+    else{
+        printError("Invalid expression type in the expression list in %s!",__func__);
+        exit(CONTEXT_ERROR);
+    }
+
+  }
+
+  return TRUE;
 }
 
 
