@@ -1,0 +1,11 @@
+class Test() is {
+    def Test() is{
+            
+    }
+}
+
+{
+    e:Test := new Test();
+    is
+    e.f();
+}
