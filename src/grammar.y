@@ -212,7 +212,7 @@ Instantiation : T_NEW T_IDENTCLASS'('LParamOpt')' {
 				ClassP type = typeForVariables($2);
 
 				/* Construct the tree */
-				makeTree(L_NEW,2,makeLeafClass(L_CLASS,type),$4);
+				$$ = makeTree(L_NEW,2,makeLeafClass(L_CLASS,type),$4);
 
 };
 
@@ -254,7 +254,7 @@ DeclVar : T_IDENT ':' T_IDENTCLASS AffectOpt';' {	IdentNature nature = chooseNat
 
 													$$ = ConstructInitialisedVar($1, nature, type, $4);};
 
-AffectOpt : T_AFFECT Expression { $$ = makeTree(L_AFFECT,1, $2);}
+AffectOpt : T_AFFECT Expression { $$ = $2; }
 | {$$ = NIL(Tree);};
 
 Affectation : Instance T_AFFECT Expression';'{$$ = makeTree(L_AFFECT, 2, $1, $3);};

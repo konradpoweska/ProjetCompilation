@@ -22,8 +22,7 @@ typedef enum _Label{
 	L_DIV,
 
 	/* Affectation Operator (binary Operator) */
-	L_AFFECT,		/* Affectation, 1 or 2 children : 1 = TreeP (Instance), 2= TreeP (Expression)
-													  1 = TreeP (AffectOpt) */
+	L_AFFECT,		/* Affectation, 2 children : 1 = TreeP (Instance), 2= TreeP (Expression) */
 
 	/* Comparison Operators (binary Operators) */
 	L_NOTEQ,

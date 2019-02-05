@@ -9,10 +9,6 @@
 #include "init.h"
 
 
-/* Predef classes */
-extern Class Integer;
-extern Class String;
-
 /* A list that stores all the classes of the programm in order to use them for context verif */
 extern ClassDeclP classList;
 
@@ -127,10 +123,10 @@ TreeP makeLeafMethod(Label label, MethodP method){
  */
 TreeP getChild(TreeP tree, int i) {
 	if(tree == NIL(Tree)) {
-		printError("internal: accessing child in null node.");
+		printError("internal: accessing child in null node.\n");
 		return NIL(Tree);
 	}
-	if(i >= tree->nbChildren) printError("internal: accessing non existing child.");
+	if(i >= tree->nbChildren) printError("internal: accessing non existing child.\n");
   return tree->u.children[i];
 }
 

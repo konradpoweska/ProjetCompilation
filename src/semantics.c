@@ -127,9 +127,19 @@ bool checkScope(VarDeclP scope, TreeP callback, VarDeclP env) {
   if(scope == NIL(VarDecl))
     return checkExpression(callback, env);
 
-  if(scope->initialValue != NIL(Tree)) {
+  getClass(&scope->type); /* link type */
+
+  if(scope->initialValue != NIL(Tree)) { /* check & link initial value */
     if(!checkExpression(scope->initialValue, env))
       return FALSE;
+
+    ClassP rightType = getType(scope->initialValue);
+    ClassP leftType = scope->type;
+
+    if(!derivesType(rightType, leftType)) {
+      printError("Assignment of incompatible type: %s to %s\n", rightType->name, leftType->name);
+      exit(CONTEXT_ERROR);
+    }
   }
 
   VarDeclP next = scope->next;
@@ -198,6 +208,7 @@ bool checkCAST(TreeP expr, VarDeclP env){
 bool checkAffect(TreeP expr, VarDeclP env) {
   if(expr->nbChildren == 1) return checkExpression(getChild(expr, 0), env);
 
+  /* Todo : allow left to only be a var or selection */
   checkExpression(getChild(expr, 0), env);
   ClassP leftType  = getType(getChild(expr, 0));
   checkExpression(getChild(expr, 1), env);
@@ -606,11 +617,11 @@ ClassP getType(TreeP expr) {
     case L_ADD: case L_SUB:
     case L_MULT: case L_DIV:
     case L_UNARYPLUS: case L_UNARYMINUS:
-      return &Integer;
+      return Integer;
 
     case L_CONSTSTR:
     case L_CONCAT:
-      return &String;
+      return String;
 
     case L_SELECTION: return getTypeSELEC(expr);
     case L_MESSAGE: return getTypeMSG(expr);

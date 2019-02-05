@@ -8,8 +8,8 @@ void _Init(){
 	
 	/* Predefined class */
 	/* 		(className, SuperClass, Constructor,    Header    , Attributes, Methods, predef, Object) */
-	ConstructClass("Integer",NIL(Class),NIL(Method),NIL(VarDecl), NIL(VarDecl),NIL(MethDecl), TRUE, FALSE);
-	ConstructClass("String",NIL(Class),NIL(Method),NIL(VarDecl), NIL(VarDecl),NIL(MethDecl), TRUE, FALSE);
+	Integer = ConstructClass("Integer",NIL(Class),NIL(Method),NIL(VarDecl), NIL(VarDecl),NIL(MethDecl), TRUE, FALSE);
+	String  = ConstructClass("String",NIL(Class),NIL(Method),NIL(VarDecl), NIL(VarDecl),NIL(MethDecl), TRUE, FALSE);
 
 	
 }
