@@ -78,7 +78,7 @@ VarDeclP getVarDecl(VarDeclP* var, VarDeclP env) {
     exit(UNEXPECTED);
   }
 
-    //var is not temporary
+  // TODO : add tmp attribute to VarDecl
   /*if(!(*var)->tmp){
     return *var;
   }*/
@@ -114,68 +114,80 @@ MethodP getMethod(MethodP* method, ClassP class) {
 }
 
 
-////// CHECKERS //////
 
-bool checkVarDecl(VarDeclP var, VarDeclP env) {
-  //assuming var is not temp
 
-  getClass(&(var->type));//Checks if the type exists, and link it in the VarDecl if it does
+/////////////////////////////////////
+//////// EXPRESSION CHECKING ////////
+/////////////////////////////////////
 
-  if(var->initialValue != NIL(Tree)){
-    checkExpression(var->initialValue, env);//Checks if affected expression is valid
-    ClassP initialValType = getType(var->initialValue);
-    if(!derivesType(initialValType, var->type)){
-      printError("Expected %s, got %s\n", var->type->name, initialValType->name);
-      exit(CONTEXT_ERROR);
-    }
+/* Recursive function : adds every variable declaration to scope checking its
+ * initialValue, and checksExpression(callback) with env = scope+env.
+ */
+bool checkScope(VarDeclP scope, TreeP callback, VarDeclP env) {
+  if(scope == NIL(VarDecl))
+    return checkExpression(callback, env);
+
+  if(scope->initialValue != NIL(Tree)) {
+    if(!checkExpression(scope->initialValue, env))
+      return FALSE;
   }
 
-  return TRUE;
+  VarDeclP next = scope->next;
+  scope->next = env; // scope is now first element + env
+
+  bool val = checkScope(next, callback, scope);
+
+  scope->next = next; // back to normal
+
+  return val;
 }
 
+
 bool checkBlock(TreeP expr, VarDeclP env) {
-  TreeP firstChild = expr->u.children[0];
+  TreeP firstChild = getChild(expr, 0);
 
   if(firstChild == NIL(Tree)) {
-    printError("internal: bloc has no children in %s\n", __func__);
-    exit(UNEXPECTED);
+    return TRUE;
   }
   else if(firstChild->opLabel == L_LISTVAR) {
-    VarDeclP* undoBuff;
-    VarDeclP blocEnv = firstChild->u.ListDecl;
-
-    concatEnv(&blocEnv, env, &undoBuff);
-    checkExpression(expr->u.children[1], blocEnv);
-    undoConcatEnv(&undoBuff);
-    return TRUE;
+    return checkScope(firstChild->u.ListDecl, getChild(expr, 1), env);
   }
   else
     return checkExpression(firstChild, env);
 }
 
+
+bool checkListInst(TreeP expr, VarDeclP env) {
+  if(!checkExpression(getChild(expr, 0), env)) return FALSE;
+  if(expr->nbChildren == 2)
+    if(!checkExpression(getChild(expr, 1), env)) return FALSE;
+  return TRUE;
+}
+
+
 /* Returns true if all different types are correctly declared and in the scope;
  * and the class we are trying to cast to is a superclass of the casted expression.
  */
 bool checkCAST(TreeP expr, VarDeclP env){
-    if(expr == NULL || expr->opLabel != L_CAST) exit(UNEXPECTED);
+    TreeP classNode = getChild(expr, 0);
 
-    TreeP classNode = expr->u.children[0];
+    if(classNode == NIL(Tree) || classNode->opLabel != L_CLASS) {
+      printError("internal: no L_CLASS child on L_CAST node\n");
+      exit(UNEXPECTED);
+    };
 
-    if(classNode == NIL(Tree)) exit(UNEXPECTED);
-    //malformed tree
+    ClassP destType = getClass(&classNode->u.class);
 
-    ClassP realClass = getClass(&classNode->u.class);
-
-    if(realClass == NIL(Class)){
+    if(destType == NIL(Class)){ // is never called : getClass exits() anyway
         printError("cast into unknown type : %s", classNode->u.class->name);
         exit(CONTEXT_ERROR);
     }
 
-    checkExpression(expr->u.children[1], env);
-    ClassP originalClass = getType(expr->u.children[1]);
+    checkExpression(getChild(expr, 1), env);
+    ClassP exprType = getType(getChild(expr, 1));
 
-    if(!derivesType(originalClass, realClass)){
-        printError("unauthorised cast : %s is not a subclass of %s", originalClass->name, realClass->name);
+    if(!derivesType(exprType, destType)){
+        printError("unauthorised cast : %s is not a subclass of %s", exprType->name, destType->name);
         exit(CONTEXT_ERROR);
     }
 
@@ -183,43 +195,35 @@ bool checkCAST(TreeP expr, VarDeclP env){
 }
 
 
-bool checkNEW(TreeP expr, VarDeclP env){
-    if(expr == NIL(Tree) || expr->opLabel != L_NEW) {
-        printError("invalid argument in %s\n", __func__);
-        exit(UNEXPECTED);
-    }
+bool checkAffect(TreeP expr, VarDeclP env) {
+  if(expr->nbChildren == 1) return checkExpression(getChild(expr, 0), env);
 
-    ClassP class = expr->u.children[0]->u.class;
+  checkExpression(getChild(expr, 0), env);
+  ClassP leftType  = getType(getChild(expr, 0));
+  checkExpression(getChild(expr, 1), env);
+  ClassP rightType = getType(getChild(expr, 1));
 
-    if(class == NIL(Class)) exit(UNEXPECTED);
+  if(!derivesType(rightType, leftType)) {
+    printError("Assignment of incompatible type: %s to %s", rightType->name, leftType->name);
+    exit(CONTEXT_ERROR);
+  }
 
-
-    if(getClassInList(classList, class->name) == NIL(Class)){
-        printError("Trying to instantiate non declared class %s", class->name);
-        exit(CONTEXT_ERROR);
-    }
-
-    return TRUE;
+  return TRUE;
 }
+
 
 bool checkID(TreeP expr, VarDeclP env){
-    if(expr == NIL(Tree) || expr->opLabel != L_ID) {
-        printError("invalid argument in %s\n", __func__);
-        exit(UNEXPECTED);
-    }
+    VarDeclP var = getVarDecl(&expr->u.ListDecl, env);
 
-    //all checks already performed
-    return TRUE;
+    return var != NIL(VarDecl);
 }
 
-bool checkSELEC(TreeP expr, VarDeclP env){
-    if(expr == NIL(Tree) || expr->opLabel != L_SELECTION) {
-        printError("invalid argument in %s\n", __func__);
-        exit(UNEXPECTED);
-    }
 
-    TreeP identifier = expr->u.children[1];
-    ClassP selectedOn = getType(expr->u.children[0]);
+bool checkSELEC(TreeP expr, VarDeclP env){
+    TreeP identifier = getChild(expr, 1);
+
+    checkExpression(getChild(expr, 0), env);
+    ClassP selectedOn = getType(getChild(expr, 0));
 
     //check that the selected value is an attribute of the selected on class
     if(getVarInList(selectedOn->attributes, identifier->u.ListDecl->name) == NIL(VarDecl)){
@@ -230,18 +234,18 @@ bool checkSELEC(TreeP expr, VarDeclP env){
     return checkID(identifier, env);
 }
 
-/*Checks if provided arguments at call of method/constructor are compatible with method/constructor definition*/
+
+/* Checks if provided arguments at call of method/constructor are compatible
+ * with method/constructor definition */
 bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
-  
   if(
     exprList == NIL(Tree) ||
-    exprList->opLabel != L_PARAMLIST ||
-    definition == NIL(VarDecl)
+    exprList->opLabel != L_PARAMLIST
   ) {
       printError("invalid argument in %s\n", __func__);
       exit(UNEXPECTED);
   }
-  
+
   VarDeclP param = definition; /* We are on the first param */
 
   TreeP arg = exprList;
@@ -259,7 +263,7 @@ bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
     /*Last param of the list*/
     if(arg->nbChildren==1){
 
-        if(getType(getChild(arg,0)) != param->type){
+        if(!derivesType(getType(getChild(arg,0)), param->type)) {
             printError("Invalid param type !");
             exit(CONTEXT_ERROR);
         }
@@ -268,7 +272,7 @@ bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
     /* Param + continue the list of param */
     else if(arg->nbChildren==2){
 
-        if(getType(getChild(arg,0)) != param->type){
+        if(!derivesType(getType(getChild(arg,0)), param->type)) {
             printError("Invalid param type !");
             exit(CONTEXT_ERROR);
         }
@@ -287,6 +291,53 @@ bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
 }
 
 
+bool checkNEW(TreeP expr, VarDeclP env){
+  TreeP classNode = getChild(expr, 0);
+
+  if(classNode == NIL(Tree) || classNode->opLabel != L_CLASS) {
+    printError("internal: first child of L_NEW node is not a L_CLASS, in %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+
+  ClassP class = getClass(&classNode->u.class);
+  if(class == NIL(Class)) {
+    printError("Trying to instantiate non declared class %s\n", class->name);
+    exit(CONTEXT_ERROR);
+  }
+
+  printf("Checking arguments of %s constructor\n", class->name);
+  if(!checkProvidedArgs(getChild(expr, 1), class->header, env)) {
+    printError("incompatible arguments given for %s constructor\n", class->name);
+    exit(CONTEXT_ERROR);
+  }
+
+  return TRUE;
+}
+
+
+bool checkMSG(TreeP expr, VarDeclP env) {
+  TreeP methodNode = getChild(expr, 1);
+
+  checkExpression(getChild(expr, 0), env);
+  ClassP selectedOn = getType(getChild(expr, 0));
+
+  MethodP method = getMethod(&methodNode->u.method, selectedOn);
+
+  //check that the selected value is an attribute of the selected on class
+  if(method == NIL(Method)){
+      printError("%s is not an method of %s", method->name, selectedOn->name);
+      exit(CONTEXT_ERROR);
+  }
+
+  if(!checkProvidedArgs(getChild(expr, 2), method->parameters, env)) {
+    printError("incompatible arguments given for %s method\n", method->name);
+    exit(CONTEXT_ERROR);
+  }
+
+  return TRUE;
+}
+
+
 bool checkExpression(TreeP expr, VarDeclP env) {
   if(expr == NIL(Tree)) {
     printError("internal: null argument in %s\n", __func__);
@@ -295,8 +346,26 @@ bool checkExpression(TreeP expr, VarDeclP env) {
 
   switch(expr->opLabel) {
     case L_BLOC: return checkBlock(expr, env);
+    case L_LISTINST: return checkListInst(expr, env);
+    case L_ID: return checkID(expr, env);
+    case L_MESSAGE: return checkMSG(expr, env);
+    case L_NEW: return checkNEW(expr, env);
+    case L_CAST: return checkCAST(expr, env);
+    case L_SELECTION: return checkSELEC(expr, env);
+    case L_AFFECT: return checkAffect(expr, env);
+
+    case L_CONSTINT:
+    case L_CONSTSTR:
+      return TRUE;
+
+    case L_ADD: case L_SUB: // Todo : recursive check
+    case L_MULT: case L_DIV: // Todo : recursive check
+    case L_UNARYPLUS: case L_UNARYMINUS: // Todo : recursive check
+    case L_CONCAT: // Todo : recursive check
+      return FALSE;
+
     default:
-      printError("In %s, unrecognised type of expression (label=%d)\n",
+      printError("internal: in %s, unrecognized type of expression (label=%d)\n",
         __func__, expr->opLabel);
       exit(UNEXPECTED);
   }
@@ -311,11 +380,6 @@ bool checkExpression(TreeP expr, VarDeclP env) {
 ////////////////////////////////
 
 bool sameArgList(VarDeclP l1, VarDeclP l2) {
-  if(l1 == NIL(VarDecl) || l2 == NIL(VarDecl)) {
-    printError("null argument passed to %s\n", __func__);
-    exit(UNEXPECTED);
-  }
-
   while(l1 != l2) { // if pointers are equal, lists are equal
 
     if(l1 == NIL(VarDecl) || l2 == NIL(VarDecl))
@@ -385,6 +449,7 @@ bool checkCircularInheritance(ClassP class) {
   ClassP ccopy = class;
 
   while(class->superClass != NIL(Class)) {
+    getClass(&class->superClass);
     class->alreadyMet = TRUE;
     class = class->superClass;
 
@@ -406,8 +471,12 @@ bool checkClassConstructorHeader(ClassP class) {
   // assuming class & its contructor are not temp
   MethodP constr;
 
-  if(class == NIL(Class) || (constr = class->constructor) == NIL(Method)) {
+  if(class == NIL(Class)) {
     printError("null argument in %s\n", __func__);
+    exit(UNEXPECTED);
+  }
+  if((constr = class->constructor) == NIL(Method)) {
+    printError("in %s, class %s has no constructor\n", __func__, class->name);
     exit(UNEXPECTED);
   }
 
@@ -437,13 +506,23 @@ bool checkClass(ClassP class) {
    * - check header & constructor
    * - add var-arguments to attributes
    * - check type of every attribute
+   * - check method headers, body + set owner
    * - forbid method overloading
-   * - check each method body + set owner
    */
 
   checkCircularInheritance(class);
 
   checkClassConstructorHeader(class);
+
+  /* TODO : check attributes + add var-arguments */
+
+  MethDeclP methdL = class->methods;
+  while(methdL != NIL(MethDecl)) {
+    // checkMethod(methdL->method, env);
+    methdL->method->owner = class;
+    isSurcharge(class, methdL->method);
+    methdL = methdL->next;
+  }
 
   return FALSE;
 }
@@ -453,9 +532,14 @@ bool checkAllClasses() {
   ClassDeclP clist = classList; // keep global list untouched
 
   while(clist != NIL(ClassDecl)) {
-    checkClass(clist->class);
+    if(!clist->class->predef) // do not check predefined classes
+      if(!checkClass(clist->class))
+        return FALSE;
+
     clist = clist->next;
   }
+
+  return TRUE;
 }
 
 
@@ -471,8 +555,8 @@ ClassP getTypeITE(TreeP expr) {
     exit(UNEXPECTED);
   }
 
-  const ClassP thenType = getType(expr->u.children[1]);
-  const ClassP elseType = getType(expr->u.children[2]);
+  const ClassP thenType = getType(getChild(expr, 1));
+  const ClassP elseType = getType(getChild(expr, 2));
 
   if(thenType == elseType) return thenType;
   else {
@@ -483,34 +567,18 @@ ClassP getTypeITE(TreeP expr) {
 
 
 ClassP getTypeNEW(TreeP expr) {
-  if(expr == NIL(Tree) || expr->opLabel != L_NEW) {
-    printError("invalid argument in %s\n", __func__);
-    exit(UNEXPECTED);
-  }
-
-  TreeP classNode = expr->u.children[0];
-  if(classNode == NIL(Tree) || classNode->opLabel != L_CLASS) {
-    printError("first child of L_NEW node is not a L_CLASS, in %s\n", __func__);
-  }
-
-  return getClass(&classNode->u.class);
+  TreeP classNode = getChild(expr, 0);
+  return classNode->u.class;
 }
 
 
 ClassP getTypeSELEC(TreeP expr) {
-  if(expr == NIL(Tree) || expr->opLabel != L_SELECTION) {
-    printError("invalid argument in %s\n", __func__);
-    exit(UNEXPECTED);
-  }
-
-  return getType(expr->u.children[1]);
+  return getType(getChild(expr, 1));
 }
 
 
 ClassP getTypeMSG(TreeP expr) {
-  if(expr==NULL || expr->opLabel != L_MESSAGE) exit(UNEXPECTED);
-
-  MethodP calledMethod = expr->u.children[1]->u.method;
+  MethodP calledMethod = getChild(expr, 1)->u.method;
 
   //malformed tree
   if(calledMethod == NIL(Method)) exit(UNEXPECTED);
@@ -520,17 +588,10 @@ ClassP getTypeMSG(TreeP expr) {
 
 
 ClassP getTypeCAST(TreeP expr) {
-  if(expr == NULL || expr->opLabel != L_CAST) exit(UNEXPECTED);
-
-  return expr->u.children[0]->u.class;
+  return getChild(expr, 0)->u.class;
 }
 
 ClassP getTypeID(TreeP expr){
-  if(expr == NIL(Tree) || expr->opLabel != L_ID) {
-    printError("invalid argument in %s\n", __func__);
-    exit(UNEXPECTED);
-  }
-
   return expr->u.ListDecl->type;
 }
 

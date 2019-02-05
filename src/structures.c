@@ -126,6 +126,11 @@ TreeP makeLeafMethod(Label label, MethodP method){
  * @return child number i
  */
 TreeP getChild(TreeP tree, int i) {
+	if(tree == NIL(Tree)) {
+		printError("internal: accessing child in null node.");
+		return NIL(Tree);
+	}
+	if(i >= tree->nbChildren) printError("internal: accessing non existing child.");
   return tree->u.children[i];
 }
 

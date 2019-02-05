@@ -25,6 +25,7 @@
 	#include "string.h"
 	#include "structures.h"
 	#include "common.h"
+	#include "semantics.h"
 
 	#include "stdio.h"
 
@@ -67,7 +68,7 @@
 %}
 
 %%
-Program : LDeclsOpt Bloc { /*printFullClassList(classList);*/printExpr($2,0);/* TODO 2ePassageArbre(...) puis VerifClasses(...) puis VerifContextuelle(...) genCode(...) */};
+Program : LDeclsOpt Bloc { /*printFullClassList(classList); printExpr($2,0);*/ checkAllClasses(); checkExpression($2, NIL(VarDecl));};
 
 LDeclsOpt : Class LDeclsOpt 
 | Object LDeclsOpt 

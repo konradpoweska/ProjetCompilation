@@ -56,8 +56,8 @@ MethodP getMethod(MethodP* method, ClassP class);
 //////// EXPRESSION CHECKING ////////
 /////////////////////////////////////
 
-/* Set of functions to recursively check if tree is properly constructed,
- * including scope checking, and linking variables/methods/classes.
+/* Function to recursively check if tree is properly constructed,
+ * including linking variables/methods/classes and scope checking.
  */
 
 bool checkExpression(TreeP block, VarDeclP env);
@@ -68,10 +68,6 @@ bool checkExpression(TreeP block, VarDeclP env);
 ////////////////////////////////
 //////// CLASS CHECKING ////////
 ////////////////////////////////
-
-bool sameArgList(VarDeclP l1, VarDeclP l2);
-
-bool checkClassConstructorHeader(ClassP class);
 
 bool checkClass(ClassP class);
 
