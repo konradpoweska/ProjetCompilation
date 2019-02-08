@@ -57,7 +57,6 @@ ClassP getClass(ClassP* class) {
     exit(UNEXPECTED);
   }
 
-    //class is not temporary
   if(!(*class)->tmp){
     return *class;
   }
@@ -99,7 +98,6 @@ MethodP getMethod(MethodP* method, ClassP class) {
     exit(UNEXPECTED);
   }
 
-  //method is not temporary
   if(!(*method)->tmp){
     return *method;
   }
@@ -248,54 +246,41 @@ bool checkSELEC(TreeP expr, VarDeclP env){
 
 /* Checks if provided arguments at call of method/constructor are compatible
  * with method/constructor definition */
-bool checkProvidedArgs(TreeP exprList, VarDeclP definition, VarDeclP env) {
-  if(
-    exprList == NIL(Tree) ||
-    exprList->opLabel != L_PARAMLIST
-  ) {
-      printError("invalid argument in %s\n", __func__);
+bool checkProvidedArgs(TreeP providedArgList, VarDeclP definition, VarDeclP env) {
+
+  while(providedArgList != NIL(Tree) && definition != NIL(VarDecl)) {
+    if(providedArgList->opLabel != L_PARAMLIST) {
+      printError("internal: not a argument in argument list.\n");
       exit(UNEXPECTED);
+    }
+
+    TreeP providedArg = getChild(providedArgList, 0);
+
+    if(!checkExpression(providedArg, env)) {
+      printError("invalid provided argument.\n");
+      exit(CONTEXT_ERROR);
+    }
+
+    ClassP providedArgType = getType(providedArg);
+
+    if(!derivesType(providedArgType, definition->type)) {
+      printError("not matching type for %s argument : expected %s or subtype, got %s.\n",
+        definition->name, definition->type->name, providedArgType->name);
+      exit(CONTEXT_ERROR);
+    }
+
+    definition = definition->next;
+    providedArgList = (providedArgList->nbChildren > 1) ? getChild(providedArgList, 1) : NIL(Tree);
   }
 
-  VarDeclP param = definition; /* We are on the first param */
+  if(definition != NIL(VarDecl)) {
+    printError("Too few arguments provided.\n");
+    exit(CONTEXT_ERROR);
+  }
 
-  TreeP arg = exprList;
-
-  while(arg!=NIL(Tree)){
-
-    /* Too many arguments provided */
-    if(param == NIL(VarDecl)){
-
-        printError("Too many arguments used !");
-        exit(CONTEXT_ERROR);
-
-    }
-
-    /*Last param of the list*/
-    if(arg->nbChildren==1){
-
-        if(!derivesType(getType(getChild(arg,0)), param->type)) {
-            printError("Invalid param type !");
-            exit(CONTEXT_ERROR);
-        }
-
-    }
-    /* Param + continue the list of param */
-    else if(arg->nbChildren==2){
-
-        if(!derivesType(getType(getChild(arg,0)), param->type)) {
-            printError("Invalid param type !");
-            exit(CONTEXT_ERROR);
-        }
-
-        arg=getChild(arg,1);
-        param=param->next;
-    }
-    else{
-        printError("Invalid expression type in the expression list in %s!",__func__);
-        exit(CONTEXT_ERROR);
-    }
-
+  if(providedArgList != NIL(Tree)) {
+    printError("Too many arguments provided.\n");
+    exit(CONTEXT_ERROR);
   }
 
   return TRUE;
@@ -316,7 +301,6 @@ bool checkNEW(TreeP expr, VarDeclP env){
     exit(CONTEXT_ERROR);
   }
 
-  printf("Checking arguments of %s constructor\n", class->name);
   if(!checkProvidedArgs(getChild(expr, 1), class->header, env)) {
     printError("incompatible arguments given for %s constructor\n", class->name);
     exit(CONTEXT_ERROR);
@@ -492,9 +476,8 @@ bool checkClassConstructorHeader(ClassP class) {
   }
 
   if(strcmp(constr->name, class->name) != 0) {
-    printError(
-      "in %s, constructor has different name than its class: %s != %s\n",
-      __func__, constr->name, class->name);
+    printError("constructor name (%s) doesn't match its class name (%s)\n",
+      constr->name, class->name);
     exit(UNEXPECTED);
   }
 
